@@ -8,6 +8,7 @@ library(cluster)
 library(GGally)
 library(plotly)
 library(clValid)# for cluster validation
+
 #### functions ####
 
 # plot the within sum of squares for a number of executions of the k-means algorithm
@@ -20,6 +21,7 @@ wssplot <- function(data, nc=15, seed=123){
   plot(1:nc, wss, type="b", xlab="Number of groups",
        ylab="Sum of squares within a group")}
 
+#### prepare dataframe ####
 # thisDF = a dataframe containing one column with tilda_Serial and the remaining the cognitive measure recorded across n waves
 thisDf = animal_naming_df
 # set the serial number as the row names
@@ -30,45 +32,24 @@ rownames(thisDf2) <- thisDf[,1]
 df <-scale(thisDf2)
 df2<-as.data.frame(scale(thisDf2))
 df<-df2
-#check if there are any NA of NaN values in the dataframe (clValid will not know how to cluster)
+
+# check if there are any NA of NaN values in the dataframe (clValid will not know how to cluster)
 sum(is.nan(df))
 sum(is.na(df))
 df <- df[complete.cases(df), ]
 
-# explore the optimal number of clusters 
-#p <- fviz_nbclust(df, kmeans, method="wss")
-
-# mark the elbow point to show optimal number of clusters
-#p + geom_vline(xintercept = 4, linetype = 2)
-
-
-# repeat k means algorithm several times (nc) and determine at what number of groups (k)
-# there is a reduction in the clustering compactness (similarity) of the groups.
-# we don't want compactness of 100% (that would make each observation it's own group)
-# Our question is how many groups could satisfactorally explain a reasonable part of the data.
-# 
-#rm(var)# var previously used in R workspace but var used in function, so clear this
-#wssplot(data = df, nc = 20)
+#### Run clustering ####
 
 # set seed to allow replication
 set.seed(123)
 
-# compute kmeans clusters
-# note: may want to compute for a range of cluters and max iterations 
-# interpretation: with 4 clusters only 65.2% of points are compactly clustered, with 14 clusters 80.1%. 
-#sifiClusters <- kmeans(df, 14, nstart = 20)
+# run clustering across a range of K and algorithms to identify optimal clustering approach\
 
-
-# check our "between_SS /total_SS" in sifiClusters to see what percentage of "well grouped" data we have 
-#sil <- silhouette(sifiClusters$cluster, dist(df))
-#fviz_silhouette(sil)
-
-# use clvalif to validate clusters obtained with a range of methods
-
-#internal validity 
+#internal validity: Connectvity, Dunns Index, Sillhoette
 intern<- clValid(df, 2:6, clMethods=c("kmeans", "pam", "hierarchical"), validation = "internal")
 summary(intern)
 
+# plot the measures of internal validity to compare models
 op <- par(no.readonly=TRUE)
 par(mfrow=c(2,2),mar=c(4,4,3,1))
 plot(intern, legend=FALSE)
@@ -77,29 +58,30 @@ plot(nClusters(intern),measures(intern,"Dunn")[,,1],type="n",axes=F,
 legend("center", clusterMethods(intern), col=1:9, lty=1:9, pch=paste(1:9))
 par(op)
 
-#### Plot and evaluate hierarchical clustering ####
+#### Evaluate optimal clustering ####
+optimal_k <- 3
+#### Hierarchical clustering ####
 
 # plot the cluster dendogram (if hierarchical clustering outperforms other algorithms)
 hc <- clusters(intern, "hierarchical")
 # cut the tree at the optimal n clusters
-cut_avg <- cutree(hc, k = 3)
+cut_avg <- cutree(hc, k = optimal_k )
 
 # plot the clusters observed
 plot(hc)
-rect.hclust(hc , k = 3, border = 2:6)
-abline(h = 3, col = 'red')
+rect.hclust(hc , k = optimal_k , border = 2:6)
 
 # color the branches so that we can see the individual clusters
 suppressPackageStartupMessages(library(dendextend))
 avg_dend_obj <- as.dendrogram(hc)
-avg_col_dend <- color_branches(avg_dend_obj, k = 3)
+avg_col_dend <- color_branches(avg_dend_obj, k = optimal_k )
 plot(avg_col_dend)
+
 
 # Append the cluster results back onto the original data frame for interpretation 
 suppressPackageStartupMessages(library(dplyr))
 df_cl <- mutate(df, cluster = cut_avg)
 count(df_cl$cluster)
-
 
 # plot the trajectories for each cluster 
 
