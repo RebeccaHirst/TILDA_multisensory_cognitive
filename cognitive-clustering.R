@@ -60,6 +60,7 @@ par(op)
 
 #### Evaluate optimal clustering ####
 optimal_k <- 3
+
 #### Hierarchical clustering ####
 
 # plot the cluster dendogram (if hierarchical clustering outperforms other algorithms)
@@ -67,21 +68,18 @@ hc <- clusters(intern, "hierarchical")
 # cut the tree at the optimal n clusters
 cut_avg <- cutree(hc, k = optimal_k )
 
-# plot the clusters observed
-plot(hc)
-rect.hclust(hc , k = optimal_k , border = 2:6)
-
 # color the branches so that we can see the individual clusters
 suppressPackageStartupMessages(library(dendextend))
 avg_dend_obj <- as.dendrogram(hc)
 avg_col_dend <- color_branches(avg_dend_obj, k = optimal_k )
 plot(avg_col_dend)
 
-
 # Append the cluster results back onto the original data frame for interpretation 
 suppressPackageStartupMessages(library(dplyr))
 df_cl <- mutate(df, cluster = cut_avg)
 count(df_cl$cluster)
+
+
 
 # plot the trajectories for each cluster 
 
