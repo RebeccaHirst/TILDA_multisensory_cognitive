@@ -10,6 +10,7 @@ The analysis comprises of three parts, with similar structure for each:
   2. Cross-sectional analysis of Sustained Attention to Response Task (SART)
   3. Cross-sectional analysis of Colour Trials Test (CTT)
 
+All models are run fully adjusted for covariates. 
 "
 #### import libraries ####
 
@@ -92,79 +93,6 @@ analysis_df_long_scaled$CRTmeanmot_W3 <-scale(analysis_df_long_scaled$CRTmeanmot
 analysis_df_long_scaled$nTrials<-2
 
 #### Fit mixed models ####
-# First we run models with basic covariates (age, sex and education) - "basic models"
-# Then we include all covariates. - "fully adjusted models"
-# We can report both in supplementary but will report the fully adjusted model in the article.
-
-# First each model was run with and without an optimizer parameter to assess the most 
-# parsimonious approach (i.e. the approach that enables convergence across most models.)
-
-
-# basic models
-
-# An additive null model (no cognitive measures) - Null model
-SOA_PP_age_sex_edu_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# An additive model with MRT and CRT aspects of the CRT - CRT + MRT model
-SOA_CRTm_CRTc_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 + CRTmeancog_W3 + CRTmeanmot_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# An additive model with only CRT aspect of the CRT - CRT model
-SOA_CRTc_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 +  CRTmeancog_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# An additive model with only MRT aspect of the CRT - MRT model
-SOA_CRTm_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 + CRTmeanmot_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# Test significance of basic additive effects 
-
-# Likelihood ratio test: Null vs. CRT model
-anova(SOA_PP_age_additive, SOA_CRTc_PP_age_additive) # CRTcog does not improve model fit compared to null
-
-# Likelihood ratio test: Null vs. MRT model
-anova(SOA_PP_age_additive, SOA_CRTm_PP_age_additive) # CRTmot improves model fit compared to null
-
-# Likelihood ratio test: MRT model vs. CRT + MRT model
-anova(SOA_CRTm_PP_age_additive, SOA_CRTm_CRTc_PP_age_additive) # CRTmot + CRTcog does not improve modal relative to the CRTmot alone
-
-# Likelihood ratio test: CRT model vs. CRT + MRT model
-anova(SOA_CRTc_PP_age_additive, SOA_CRTm_CRTc_PP_age_additive) # CRTmot + CRTcog does improve modal relative to the CRTcog alone
-
-
-# Interpretation - MRT but not CRT aspects of the CRT improved model fit - therefore explore interaction
-
-# Interaction model: MRT * SOA
-SOA_CRTm_PP_age_interaction <-glmer(
-  Accuracy ~  age_W3 +sex_W3 + edu3_W3 + CRTmeanmot_W3*SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-
-# Likelihood ratio test: MRT + SOA model vs. MRT * SOA model
-anova(SOA_CRTm_PP_age_additive, SOA_CRTm_PP_age_interaction) # interaction term significantly improves model fit
-
-# Summarize results
-summary(SOA_CRTm_PP_age_interaction)
-a<-ggpredict(SOA_CRTm_PP_age_interaction, c("SOA", "scale(CRTmeanmot_W3)"))
-
-# Plot in black and white
-plot(a,connect.lines=TRUE, limits=c(0, 1), colors="bw", dot.size = 3)+labs(x = "Stimulus Onset Asynchrony (ms)", shape=" ")
-
-# Dot whisker plot of full model
-
-dwplot(SOA_CRTm_PP_age_interaction,dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
-
-
 # Fully adjusted models
 
 # An additive null model (no cognitive measures) - Adjusted Null model
@@ -284,63 +212,6 @@ analysis_df_long_scaled$nTrials<-2
 
 
 #### Fit mixed models ####
-# First we run models with basic covariates (age, sex and education) - "basic models"
-# Then we include all covariates. - "fully adjusted models"
-# We can report both in supplementary but will report the fully adjusted model in the article.
-
-# First each model was run with and without an optimizer parameter to assess the most 
-# parsimonious approach (i.e. the approach that enables convergence across most models.)
-
-
-# Basic models
-
-# Null model already fitted for CRT
-
-# An additive model with omission and commission aspects of the SART - omissions + commissions model
-SOA_SARTe_SARTo_PP_age_additive <-glmer(
-  Accuracy ~ age_W3 +sex_W3 + edu3_W3 + COGsartOmmissions_W3 + COGsartErrors3_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# An additive model with commission aspect of the SART - commission model
-SOA_SARTe_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 +sex_W3 + edu3_W3 + COGsartErrors3_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# An additive model with omission aspect of the SART - omission model
-SOA_SARTo_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 +sex_W3 + edu3_W3 + COGsartOmmissions_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# Test significance of additive effects 
-
-# Likelihood ratio test: Null vs. commission model
-anova(SOA_PP_age_additive, SOA_SARTe_PP_age_additive)
-
-# Likelihood ratio test: Null vs. omission model
-anova(SOA_PP_age_additive, SOA_SARTo_PP_age_additive)
-
-# Interaction model: commission * SOA
-SOA_SARTe_PP_age_interaction <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 + COGsartErrors3_W3*SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# Likelihood ratio test: commission + SOA model vs. commission * SOA model
-anova(SOA_SARTe_PP_age_additive, SOA_SARTe_PP_age_interaction)
-
-# Summarize results
-summary(SOA_SARTe_PP_age_interaction)
-a<-ggpredict(SOA_SARTe_PP_age_interaction, c("SOA", "scale(COGsartErrors3_W3)"))
-
-# Plot in black and white
-plot(a,connect.lines=TRUE, limits=c(0, 1), colors="bw", dot.size = 3)+labs(x = "Stimulus Onset Asynchrony (ms)", shape=" ")
-
-# Dotwhisker plot of full model
-dwplot(SOA_SARTe_PP_age_interaction,dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
-
 # Fully Adjusted Models
 
 # An additive model with omission aspect of SART  - Adjusted omission model
@@ -438,61 +309,6 @@ analysis_df_long_scaled$nTrials<-2
 
 
 #### Fit mixed models ####
-# First we run models with basic covariates (age, sex and education) - "basic models"
-# Then we include all covariates. - "fully adjusted models"
-# We can report both in supplementary but will report the fully adjusted model in the article.
-
-# Basic models 
-
-# Null model already fitted for CRT
-
-# An additive model including CTT2 time 
-
-# Additive model with the CTT2 aspect of CTT - CTT2 model
-SOA_CTT2_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 +  COGtrail2time_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-
-# Additive model with the CTT1 aspect of CTT - CTT1 model
-SOA_CTT1_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 +  COGtrail1time_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-
-# Likelihood ratio: Null vs. CTT2 model
-anova(SOA_PP_age_sex_edu_additive, SOA_CTT2_PP_age_additive)#significant improvement of adding CTT2 to the null model
-
-# Likelihood ratio: Null vs. CTT1 model
-anova(SOA_PP_age_sex_edu_additive, SOA_CTT1_PP_age_additive)
-
-# Likelihood ratio: CTT2 vs. CTT1 model (which is the strongest model)
-anova(SOA_CTT1_PP_age_additive, SOA_CTT2_PP_age_additive)
-
-# Interaction model with the CTT2 time - CTT2 * SOA model
-SOA_CTT2_PP_age_interaction <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 +  COGtrail2time_W3 * SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# Likelihood ratio: CTT2 + SOA model vs. CTT2 * SOA model
-anova(SOA_CTT2_PP_age_additive, SOA_CTT2_PP_age_interaction)
-
-# Interpretation our CTT2 model is the best model 
-
-# Summarize the results
-summary(SOA_CTT2_PP_age_interaction)
-a<-ggpredict(SOA_CTT2_PP_age_interaction, c("SOA", "scale(COGtrail2time_W3)"))
-
-# Plot in black and white
-plot(a,connect.lines=TRUE, limits=c(0, 1), colors="bw", dot.size = 3)+labs(x = "Stimulus Onset Asynchrony (ms)", shape=" ")
-
-# Dotwhisker plot of full model
-dwplot(SOA_CTT2_PP_age_interaction,dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
-
-
 # Fully Adjusted Models
 
 # An additive model with CTT1 aspect of CTT  - Adjusted CTT1 model
