@@ -7,7 +7,7 @@ All statistical analyses were performed within the R statistical programming env
 Files
 -----------------
 
-***Analysis scripts ***
+***Analysis scripts***
 
 *Inclusion/Exclusion criteria*
 *	*select_cross_sectional.R* - apply exclusion criteria to cross-sectional (wave 3) TILDA dataset. 
@@ -29,3 +29,6 @@ For information on accessing the TILDA data set see https://tilda.tcd.ie/data/.
 
 References
 ------------------
+
+R CoreTeam. (2018). R: A Language and Environment for Statistical Computing. R Foundation for Statistical Computing. http://www.r-project.org/
+
