@@ -353,4 +353,11 @@ my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
 my_incl_labels_cog<-c(my_incl_labels_cog, 'has SART')
 my_excl_labels_cog<-c(my_excl_labels_cog, 'missed >50% press trials OR pressed >80% no press trials')
 
-
+#Figure 1b shows exclusions due to cognitive measures
+flow_exclusions(
+  incl_counts = my_incl_counts_cog,
+  total_label = "Total in wave 3 (w3) Health Assessment",
+  incl_labels = my_incl_labels_cog,
+  excl_labels = my_excl_labels_cog,
+  percent_of_prev = TRUE
+)

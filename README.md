@@ -2,24 +2,30 @@ Project overview
 =================
 
 The goal of this project is to explore the relationship between multisensory perception and cognitive function in ageing using data from The Irish Longitudinal Study on Ageing (TILDA).
+All statistical analyses were performed within the R statistical programming environment, version 3.5.2 (R CoreTeam, 2018). The full analysis can be run in 3 parts; selection, cross-sectional analyses, longitudinal analyses (kml to identify trajectories followed by mixed models). 
 
+Files
+-----------------
 
-***Scripts***
+***Analysis scripts ***
 
-The analysis was run using the following scripts in the order presented below:
-
+*Inclusion/Exclusion criteria*
 *	*select_cross_sectional.R* - apply exclusion criteria to cross-sectional (wave 3) TILDA dataset. 
-*	*select_longitudinal.R* - select and combine cognitive measures across TILDA waves (wave 1 - 5). 
-*	*cognitive-kml.R* - use the KML package to make clusters for longitudinal trajectories.
-*	*cognitive-mixed-models.R* - run logistic mixed effects models to predict SIFI from cognitive trajectories
+*	*select_longitudinal.R* - select participants who also have data available from wave 1 to 5 of TILDA and combine cognitive measures across TILDA waves.
 
+*Cross-sectional analysis*
+*	*cognitive-mixed-models-CS.R* - run logistic mixed effects models to assess if cognitive measures are related to SIFI cross-sectionally at wave 3. 
 
-Other:
+*Longitudinal analysis*
+*	*cognitive-kml.R* - use the KML package to make clusters for longitudinal cognitive trajectories.
+*	*cognitive-mixed-models-LD.R* - run logistic mixed effects models to predict SIFI from cognitive trajectories
 
-*	*cognitive-clustering.R* - exploration of clustering analysis using other packages (k-means, clvalid) for longitudinal cognitive measures. 
 
 
 Data availability
 ------------------
 
 For information on accessing the TILDA data set see https://tilda.tcd.ie/data/.
+
+References
+------------------
