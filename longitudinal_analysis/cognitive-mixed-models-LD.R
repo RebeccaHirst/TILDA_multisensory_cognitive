@@ -9,49 +9,79 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 
 "
 
-# Import libraries
+# set to "animal naming", "delayed recall" or "immediate recall"
+this_cog_measure <- "animal naming"
+
+#### Import libraries ####
 library(lme4) # for mixed effects models
 library(qwraps2) # for formatted summary tables
+library(dotwhisker) # for dwplot 
+library(chisq.posthoc.test) # for posthoc comparisons of chi squared
+library(car) # for levenes test
+library(FSA) # for dunns test
 
+#### Functions ####
+# A set of custom functions used throughout analysis
 
-# Initialize functions
-# Function to extract number from a string (used for generating group labels)
+# Extract number from a string
 library(stringr)
 numextract <- function(string){ 
   str_extract(string, "\\-*\\d+\\.*\\d*")
 } 
 
-# Dataframes containing each of the cognitive groups (first run cognitive-kml with each variable to get df_with_clusters)
+#### Prep dataframe ####
 
-delayed_recall_groups <- df_with_clusters # set this after running cognitive-kml.R with delayed recall as df
-animal_naming_groups <- df_with_clusters # set this after running cognitive-kml.R with animal naming as df
-immediate_recall_groups <- df_with_clusters # set this after running cognitive-kml.R with animal naming as df
+# dataframes containing each of the cognitive groups (first run cognitive-kml with each variable to get df_with_clusters)
+if(this_cog_measure == "animal naming"){
+  animal_naming_groups <- df_with_clusters # set this after running cognitive-kml.R with animal naming as df
+}else if(this_cog_measure == "delayed recall"){
+  delayed_recall_groups <- df_with_clusters # set this after running cognitive-kml.R with delayed recall as df
+}else if (this_cog_measure == "immediate recall"){
+  immediate_recall_groups <- df_with_clusters # set this after running cognitive-kml.R with animal naming as df
+}else{warning(paste(this_cog_measure, " is not a group please use 'animal naming', 'delayed recall' or 'immediate recall'"))}
 
+# A dataframe of accuracy on the main illusory conditions (2B1F) (tilda_dataW3W1W2W4W5 is created in select_longitudinal)
+predictor_df<-tilda_dataW3W1W2W4W5%>% 
+  select(tilda_serial, # participant ID
+         Shams_2B1F_m230_W3, # accuracy on illusory 2 beep 1 flash (2B1F) SIFI condition at -230 SOA
+         Shams_2B1F_m150_W3, # accuracy on 2B1F SIFI condition at -150 SOA
+         Shams_2B1F_m70_W3, # accuracy on 2B1F SIFI condition at -70 SOA
+         Shams_2B1F_70_W3, # accuracy on 2B1F SIFI condition at +70 SOA
+         Shams_2B1F_150_W3, # accuracy on 2B1F SIFI condition at +150 SOA
+         Shams_2B1F_230_W3, # accuracy on 2B1F SIFI condition at +230 SOA
+         age_W3, # age in years at wave 3
+         sex_W3, # sex
+         edu3_W3, # eductation level
+         VAS_W3, # visual acuity score (100 = 20/20 vision)
+         ph108_W3, # self reported hearing at wave 3
+         ph102_W3, # self reported vision at wave 3
+         Shams_1B1F_W3, # accuracy on non-illusory 1B1F SIFI condition
+         Shams_2B0F_70_W3,  # accuracy on non-illusory 2B0F (70 ms) SIFI condition
+         Shams_0B2F_W3, # accuracy on non-illusory 0B2F (70 ms) SIFI condition
+         CRTmeancog_W3, # CRT cognitive RT at wave 3
+         CRTmeanmot_W3, # CRT motor RT at wave 3
+         COGsartOmmissions_W3, # SART omission errors at wave 3
+         COGsartErrors3_W3, # SART commission errors at wave 3
+         COGtrail2time_W3, # CTT2 time
+         COGtrail1time_W3, # CTT1 time
+         COGtraildeltatime_W3) # CTT delta time
 
-#### make dataframes to be used in models ####
+# Merge cognitive groups with full dataframe
 
-# a dataframe of accuracy on the main illusory conditions (2B1F) (tilda_dataW3W1W2W4W5 is created in select_longitudinal)
-Accuracy_df<-tilda_dataW3W1W2W4W5%>% 
-  select(tilda_serial, Shams_2B1F_m230_W3, Shams_2B1F_m150_W3, Shams_2B1F_m70_W3, Shams_2B1F_70_W3, Shams_2B1F_150_W3, Shams_2B1F_230_W3)
+# Select the cognitive measure you want to focus on in this analysis 
+if(this_cog_measure == "animal naming"){
+  analysis_df<-merge(predictor_df, animal_naming_groups , by='tilda_serial')
+}else if(this_cog_measure == "delayed recall"){
+  analysis_df<-merge(predictor_df, delayed_recall_groups, by='tilda_serial')
+}else if (this_cog_measure == "immediate recall"){
+  analysis_df<-merge(predictor_df, immediate_recall_groups, by='tilda_serial')
+}else{warning(paste(this_cog_measure, " is not a group please use 'animal naming', 'delayed recall' or 'immediate recall'"))}
 
-# a dataframe with predictors for adjustment (as measured at same wave as SIFI)
-predictor_df <-tilda_dataW3W1W2W4W5%>% 
-  select(tilda_serial, age_W3, sex_W3, edu3_W3, VAS_W3, ph108_W3, ph102_W3, Shams_1B1F_W3, Shams_2B0F_70_W3, 
-         Shams_0B2F_W3)
-
-#### merge cognitive groups with full dataframe ####
-
-# select the cognitive measure you want to focus on in this analysis 
-
-#analysis_df<-merge(Accuracy_df, animal_naming_groups , by='tilda_serial')
-#analysis_df<-merge(Accuracy_df, delayed_recall_groups, by='tilda_serial')
-analysis_df<-merge(Accuracy_df, immediate_recall_groups, by='tilda_serial')
-analysis_df<-merge(analysis_df, predictor_df, by='tilda_serial') # add predictors to the dataframe
-# look at the data frame
+# View the data frame
 View(analysis_df)
 
-
-#### tabulate the demographics of each cognitive trajectory group ####
+#### Tabulate the demographics  ####
+# Show demographics of each cognitive trajectory group 
 
 table(analysis_df$age_W3, analysis_df$nC3)
 options(qwraps2_markup = "markdown")
@@ -72,9 +102,144 @@ demographic_summary <-
 demo_table <- summary_table(dplyr::group_by(data, nC3), demographic_summary)
 View(demo_table)
 
-#### reshape to long format for mixed model ####
+#### Test significant differences in age between groups ####
 
-# rename the SIFI columns with standard formatting so that they can be reshaped
+# Compute the analysis of variance
+res.aov <- aov(age_W3 ~ nC3, data = analysis_df)
+# Summary of the analysis
+summary(res.aov)
+
+# Assumption checks
+# 1. Homogeneity of variances
+plot(res.aov, 1)
+
+# Levenes test for homogeneity of variance 
+leveneTest(age_W3 ~ nC3, data = analysis_df)
+
+# 2. Normality
+plot(res.aov, 2)
+# Extract the residuals
+aov_residuals <- residuals(object = res.aov )
+# Run Shapiro-Wilk test
+shapiro.test(x = aov_residuals )
+
+' Use non parametric test to account for deviations from assumptions'
+# non parametric anova
+kruskal.test(age_W3 ~ nC3, data = analysis_df)
+
+dunnTest(age_W3 ~ nC3, data = analysis_df,
+              method="bh")    # Can adjust p-values;
+# See ?p.adjust for options
+
+"
+Delayed Recall:
+	Kruskal-Wallis rank sum test
+
+data:  age_W3 by nC3
+Kruskal-Wallis chi-squared = 291.13, df = 2, p-value < 2.2e-16
+
+  Comparison          Z      P.unadj        P.adj
+1      A - B   8.271645 1.321231e-16 1.321231e-16
+2      A - C -10.281444 8.543753e-25 1.281563e-24
+3      B - C -17.046473 3.712732e-65 1.113820e-64
+
+Immediate recall
+	Kruskal-Wallis rank sum test
+
+data:  age_W3 by nC3
+Kruskal-Wallis chi-squared = 311.06, df = 2, p-value < 2.2e-16
+Dunn (1964) Kruskal-Wallis multiple comparison
+  p-values adjusted with the Benjamini-Hochberg method.
+
+  Comparison          Z      P.unadj        P.adj
+1      A - B   9.110981 8.164075e-20 8.164075e-20
+2      A - C -10.472041 1.161117e-25 1.741676e-25
+3      B - C -17.581013 3.443658e-69 1.033097e-68
+
+Animal naming:
+	Kruskal-Wallis rank sum test
+
+data:  age_W3 by nC3
+Kruskal-Wallis chi-squared = 138.18, df = 2, p-value < 2.2e-16
+
+Dunn (1964) Kruskal-Wallis multiple comparison
+  p-values adjusted with the Benjamini-Hochberg method.
+
+  Comparison         Z      P.unadj        P.adj
+1      A - B -8.121516 4.603957e-16 6.905935e-16
+2      A - C  4.897400 9.711312e-07 9.711312e-07
+3      B - C 11.310463 1.164728e-29 3.494184e-29
+"
+
+boxplot(age_W3 ~ nC3, data = analysis_df,
+        ylab="Age at wave 3",
+        xlab="Cognitive group")
+
+#### Test significant differences in sex between groups ####
+
+# Tabulate sex
+sextable <-table(analysis_df$nC3, analysis_df$sex_W3)
+
+# Observed frequencies
+obsfreq <- matrix(c(sextable[1, 2], sextable[1, 1], sextable[2, 2], sextable[2, 1], sextable[3, 2], sextable[3, 1]),nrow=2,ncol=3)
+
+# Chi squared test
+chisq.results <- chisq.test(obsfreq)
+
+# Transpose table to conduct posthoc tests using chisq.posthoc.test package
+sextable_transposed <- as.table(rbind(c(sextable[1, 2], sextable[2, 2], sextable[3, 2]), c(sextable[1, 1], sextable[2, 1], sextable[3, 1])))
+dimnames(sextable_transposed) <- list(sex = c("F", "M"),
+                    cogGroup = c("A","B", "C"))
+
+# Run test and posthoc test
+chisq.test(sextable_transposed) # sanity check against original result
+chisq.posthoc.test(sextable_transposed, method = "bonferroni")
+"
+Animal Naming: 
+
+	Pearson's Chi-squared test
+
+data:  sextable_transposed
+X-squared = 0.7548, df = 2, p-value = 0.6856
+
+  Dimension     Value          A          B          C
+1         F Residuals  0.7436035 -0.1402399 -0.7449612
+2         F  p values  1.0000000  1.0000000  1.0000000
+3         M Residuals -0.7436035  0.1402399  0.7449612
+4         M  p values  1.0000000  1.0000000  1.0000000
+
+Delayed recall
+
+	Pearson's Chi-squared test
+
+data:  sextable_transposed
+X-squared = 128.81, df = 2, p-value < 2.2e-16
+
+  Dimension     Value         A         B         C
+1         F Residuals -1.894657  9.835303 -9.168617
+2         F  p values  0.348827  0.000000  0.000000
+3         M Residuals  1.894657 -9.835303  9.168617
+4         M  p values  0.348827  0.000000  0.000000
+
+Immediate recall:
+> chisq.test(sextable_transposed) # sanity check against original result
+
+	Pearson's Chi-squared test
+
+data:  sextable_transposed
+X-squared = 121.96, df = 2, p-value < 2.2e-16
+
+  Dimension     Value         A         B        C
+1         F Residuals -2.351696  9.687398 -8.60265
+2         F  p values  0.112128  0.000000  0.00000
+3         M Residuals  2.351696 -9.687398  8.60265
+4         M  p values  0.112128  0.000000  0.00000
+"
+#### Prep dataframe ####
+
+# Reshape to long format for mixed model
+
+# Rename the SIFI columns with standard formatting so that they can be reshaped
 names(analysis_df)[names(analysis_df) ==  "Shams_2B1F_m230_W3"]<-"Pre_230"
 names(analysis_df)[names(analysis_df) ==  "Shams_2B1F_m150_W3"]<-"Pre_150"
 names(analysis_df)[names(analysis_df) ==  "Shams_2B1F_m70_W3"]<-"Pre_70"
@@ -82,20 +247,20 @@ names(analysis_df)[names(analysis_df) == "Shams_2B1F_70_W3"]<-"Post_70"
 names(analysis_df)[names(analysis_df) == "Shams_2B1F_150_W3"]<-"Post_150"
 names(analysis_df)[names(analysis_df) == "Shams_2B1F_230_W3"]<-"Post_230"
 
-# view the dataframe
+# View the dataframe
 View(analysis_df)
 
-# Reshape based on SOA - gives 6 rows per participant
+# Reshape based on SOA - gives 6 rows per participant (-230, -150,-70, 70, 150, 230)
 analysis_df_long<- reshape(analysis_df, idvar="tilda_serial",
                            varying = c("Pre_230","Pre_150", "Pre_70", "Post_70", "Post_150", "Post_230"),
                            v.name=c("Accuracy"),
                            times=c("Pre_230","Pre_150", "Pre_70", "Post_70", "Post_150", "Post_230"),
                            direction="long")
 
-# Make a column for the Pre/Post factor that is created from the time column
+# Make column for the Pre/Post (i.e. negative and positive SOAs) factor that is created from the time column
 analysis_df_long$Pre_Post <- as.numeric(grepl('Pre', analysis_df_long$time, ignore.case=T))
 
-# Make an SOA column from the time column SOA (uses custom numextract function)
+# Make an SOA column from the "time" column (using custom numextract function)
 analysis_df_long$SOA<-numextract(analysis_df_long$time)
 
 # View the data frame
@@ -114,201 +279,49 @@ analysis_df_long$Shams_0B2F_W3=factor(analysis_df_long$Shams_0B2F_W3, levels = c
 analysis_df_long$Shams_2B0F_70_W3=factor(analysis_df_long$Shams_2B0F_70_W3, levels = c(0, 0.5, 1))
 analysis_df_long$Shams_1B1F_W3=factor(analysis_df_long$Shams_1B1F_W3, levels = c(0, 0.5, 1))
 
-# Scale continuous/numeric predictors in model
+# Scale continuous/numeric predictors in model  
 analysis_df_long_scaled <- analysis_df_long
 analysis_df_long_scaled$age_W3 <-scale(analysis_df_long_scaled$age_W3)
 analysis_df_long_scaled$VAS_W3 <-scale(analysis_df_long_scaled$VAS_W3)
 
-# Re-level the cognitive group factor so that the most cognitively healthy group is the reference
-analysis_df_long$nC3_orig <- analysis_df_long$nC3 # keep the original variable for reference
-
-# The reference level for the factor "group" depends on the cognitive measure being analysed 
-# - use relevant re-level accordingly
-
-# For verbal fluency, animal_naming, group C is the healthiest, so they will be set as reference
-analysis_df_long$nC3 <- relevel(analysis_df_long$nC3, ref = "C")
-
-# For immediate and delayed recall, groups B are the healthiest, so they will be set as reference
-analysis_df_long$nC3 <- relevel(analysis_df_long$nC3, ref = "B")
-
-# View the dataframe
-View(analysis_df_long)
-
-#### Fit non adjusted mixed models  (with and without optimizers) ####
-# Note: these models are reported in supplementary material, not the main manuscript
-
-# Each model is run with and without an optimizer parameter to assess the most parsimonious approach 
-# (i.e. the approach that enables convergence across most models.)
-
 # Take into account how many trials per condition for a logistic model
 analysis_df_long_scaled$nTrials<-2
 
-# View the dataframe
-View(analysis_df_long_scaled)
+# Re-level the cognitive group factor so that the most cognitively healthy group is the reference
+analysis_df_long_scaled$nC3_orig <- analysis_df_long$nC3 # keep the original variable for reference
 
-# Start with most basic model and gradually add variables of interest
-# If convergence fails we will consider run parallel models for the Pre/Post factor as in Hernandez, Setti et al 2019
-# First each model will be fitted with and without an optimization parameter. The model most parsimonious 
-# approach in terms of convergence/interpretability will be reported. 
+if(this_cog_measure == "animal naming"){
+  # For verbal fluency, animal_naming, group C is the healthiest, so is the reference
+  analysis_df_long_scaled$nC3 <- relevel(analysis_df_long_scaled$nC3, ref = "C")
+}else{# For immediate and delayed recall, groups B are the healthiest, so is the reference
+  analysis_df_long_scaled$nC3 <- relevel(analysis_df_long_scaled$nC3, ref = "B")
+}
 
-#### Basic model 1. effect of SOA on accuracy ####
+#### Fit mixed models ####
 
-# with optimizer
-SOA_model <-glmer(
-  Accuracy ~  SOA + (1|tilda_serial), 
+# Adjusted baseline model: nC3 + SOA + age *SOA + sex * SOA
+SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexbaseline <-glmer(
+  Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+    Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# without optimizer # same result
-
-SOA_model_no <-glmer(
-  Accuracy ~  SOA + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials)
-
-#### Basic model 2. effect of SOA and cognitive trajectory group on accuracy (additive) ####
-
-# with optimizer
-
-SOA_nC3_additive <-glmer(
-  Accuracy ~  nC3 + SOA + (1|tilda_serial), 
+# Adjusted full interaction model: nC3 * SOA + age *SOA + sex * SOA
+SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexinteraction <-glmer(
+  Accuracy ~  age_W3*SOA + nC3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+    Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+'
+# Does the interaction with cognitive group remain significant after controlling fo the interaction with age and sex
 
-# without optimizer # same result
+delayed recall X2(4) = 58.834, p = 5.1e-12 ***   (baseline; AIC =28277  BIC = 28509 ; full; AIC = 28226, BIC = 28490
+animal naming X2(4) = 85.559, p < 2.2e-16 *** (baseline; AIC = 28260 BIC =28493 ; full; AIC = 28182, BIC = 28446
+immediate recall X2(4) = 76.274, p =  1.071e-15 *** (baseline; AIC = 28234 BIC = 28467; full; AIC = 28166, BIC = 28430
+'
+# Likelihood ratio test comparing full model to model with key interaction term dropped
+# Running this 3 times for longitudinal models so interpret with corrected alpha of .016
+anova(SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexbaseline, SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexinteraction)
 
-SOA_nC3_additive <-glmer(
-  Accuracy ~  nC3 + SOA + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials)
-
-
-#### Basic model 3. effect of SOA and cognitive trajectory group on accuracy (with interaction) ####
-
-# with optimizer
-
-SOA_nC3_interaction <-glmer(
-  Accuracy ~  nC3 * SOA + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# without optimizer # fails to converge
-
-SOA_nC3_interaction <-glmer(
-  Accuracy ~  nC3 * SOA + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials)
-
-
-#### Basic model 4. effect of SOA, Pre/Post and cognitive trajectory group on accuracy (additive) ####
-
-# with optimizer
-
-SOA_nC3_PP_additive <-glmer(
-  Accuracy ~  nC3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# without optimizer
-
-SOA_nC3_PP_additive <-glmer(
-  Accuracy ~  nC3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials)
-
-#### Basic model 5. effect of SOA, Pre/Post and cognitive trajectory group on accuracy (with interaction term) ####
-
-# with optimizer
-
-SOA_nC3_PP_interaction <-glmer(
-  Accuracy ~  nC3*SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# without an optimizer # fails to converge
-
-SOA_nC3_PP_interaction <-glmer(
-  Accuracy ~  nC3*SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials)
-
-#### Model 5b. additive model without cognitive trajectory group factor ####
-
-# with optimizer
-
-SOA_PP_age_additive <-glmer(
-  Accuracy ~  scale(age_W3) + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# without optimizer 
-
-SOA_PP_age_additive_no <-glmer(
-  Accuracy ~  scale(age_W3) + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials)
-
-#### Model 6. effect of SOA, AGE and cognitive trajectory group on accuracy (additive) ####
-# start introducing predictors into the model AGE SCALED
-
-# with optimizer
-
-SOA_nC3_PP_age_additive <-glmer(
-  Accuracy ~  scale(age_W3) + nC3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# without optimizer # failed to converge
-
-SOA_nC3_PP_age_additive <-glmer(
-  Accuracy ~  scale(age_W3) + nC3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials)
-
-#### Model 7. effect of SOA, age and cognitive trajectory group on accuracy - cog and SOA interaction ####
-
-# with optimizer
-
-SOA_nC3_PP_age_interaction <-glmer(
-  Accuracy ~  scale(age_W3) + nC3*SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-summary(SOA_nC3_PP_age_interaction)# show a summary of the model 
-# without optimizer # failed to converge
-
-SOA_nC3_PP_age_interaction<-glmer(
-  Accuracy ~  scale(age_W3) + nC3*SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials)
-
-#### likelihood ratio tests ####
-
-# For models that converged. Assess significance of fixed effects with likelihood ratio tests.
-
-# compare the full additive model  with cognitive trajectory group, to the null model, without cognitive trajectory group
-anova(SOA_PP_age_additive, SOA_nC3_PP_age_additive) # cognitive group improves model fit
-
-# compare the full additive model to a model with an interaction term 
-anova(SOA_nC3_PP_age_additive, SOA_nC3_PP_age_interaction) # interaction improves model fit
-
-#### plot model results ####
-
-# plot the results of the models that did converge
-a<-ggpredict(SOA_nC3_PP_age_interaction, c("SOA", "nC3"))
-
-#make plot in black and white
-plot(a,connect.lines=TRUE, limits=c(0, 1), colors="bw", dot.size = 3)+labs(x = "Stimulus Onset Asynchrony (ms)", shape=" ")
-
-# dotwhisker plot of full model
-
-library(dotwhisker)
-dwplot(SOA_nC3_PP_age_interaction)
-
-dwplot(SOA_nC3_PP_age_interaction,dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
-
-
-#### Fit adjusted mixed models  (with optimizer) ####
-# Note: these are the models reported in the main manuscript 
-
-# analysis of non adjusted models showed that inclusion of an optimizer was most parsimonious 
+# Plot the model results
+dwplot(SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexinteraction, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
