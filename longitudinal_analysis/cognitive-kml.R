@@ -1,47 +1,56 @@
 "
-Use kml package on longitudinal cognitive measures and add groups to dataframes used in mixed models
+Identify cognitive trajectory groups from waves 1 through to 5 of The Irish Longitudinal Study on Ageing (TILDA)
+[Run following 'select_cross_sectional.R' and 'select_longitudinal.R']
+
+Author(s): Hirst R J 
+
+This analysis uses the kml package to identify cognitive trajectory groups with k-means clusterin of longitudinal data.
+
 
 Benefits of kml over standard algorithms:
   
-  1. Enables modeling of joint trajectories (e.g. how memory and attention change over time together)
-  2. Wide range of k selection methods
+  1. Enables modeling of joint trajectories if needed (e.g. how memory and attention change over time together) - not used here
+  2. Wide range of k selection methods and cluster validation
+  3. Clear documentation and publications
 
 "
-# import packages
+# Type the measure you want to run k means on ('animal naming', 'delayed recall' or 'immediate recall')
+this_cog_measure <- "immediate recall"
+
+# Import packages
 library(kml)
 
-# specify the dataframe we will be working with (created in select_longitudinal.R)
+# Specify the dataframe based in this_cog_measure (created in select_longitudinal.R)
+if(this_cog_measure == "animal naming"){
+  df <- animal_naming_df
+}else if(this_cog_measure == "delayed recall"){
+  df <- delayed_recall_df
+}else if (this_cog_measure == "immediate recall"){
+  df <- immediate_recall_df
+}else{warning(paste(this_cog_measure, " is not a group please use 'animal naming', 'delayed recall' or 'immediate recall'"))}
 
-#df <- immediate_recall_df
-#df <- animal_naming_df
-df <- delayed_recall_df
-
-# Scale data? is this inbuilt in KML?
-# scaling the data is necessary for joint trajectory analysis (i.e. kml3d) because different measures might be on different scales, but it is not necessary for 
-# non-joint analysis (i.e. kml). For now, we will follow an existing TILDA pipeline and not scale.
-
-# create a matrix where each row corresponds to an individual trajectory
-
+# Create a matrix where each row corresponds to an individual trajectory
 trajMatrix <- df[,-1]
 
-# an ID vector the length og the trajectory matrix
-
+# An ID vector the length og the trajectory matrix
 IDlist <- df['tilda_serial']
-IDnumbers <- seq.int(nrow(IDlist)) # lis of IDnumbers (as in celine analysis)
+IDnumbers <- seq.int(nrow(IDlist)) # list of IDnumbers
 
-# specify the number of timepoints c(1:5) for 5 waves
-
+# Specify the number of timepoints c(1:5) for 5 waves
 timepoints <- c(1:5)
 
-# create clusterLongData object 
-
+# Create clusterLongData object 
 clustObject <- clusterLongData(idAll = IDnumbers, time = c(1:5), traj = as.matrix(trajMatrix))
 
-# run kml on clusterObject
+# Run kml on clusterObject
+kml(clustObject, nbClusters = 1:5, nbRedrawing = 100)  # If exploring (and want faster processing), remove or reduce the nbRedrawing. Takes around 7 mins with nbRedrawing 100
 
-kml(clustObject, nbClusters = 1:5, nbRedrawing = 100)  #If exploring (and want faster processing), remove or reduce the nbRedrawing. Takes around 7 mins with nbRedrawing 100
+# Use choice to see the number of clusters selected based on Calsinki and Harabatz 
+choice(clustObject)
 
-#Check the fit statistics - higher = better. Quality criteria comparison. Look for the number of clusters (x axis) that lead to the highest value on the y-axis. The criteria don't always agree.
+# Check consistency across several fit statistics
+# higher = better. Quality criteria comparison. Look for the number of clusters (x axis) that lead to the highest value on the y-axis. 
+# The criteria don't always agree - pick the most consistent.
 plotAllCriterion(clustObject) 
 
 # Plot the trajectories with the selected number of criterion. 
@@ -51,10 +60,10 @@ plot(clustObject,4)
 plot(clustObject,5) 
 
 
-#Extract group-membership for each cluster IDs 
+# Extract group-membership for each cluster IDs 
 df_with_clusters <- data.frame(as.integer(clustObject@idAll), getClusters(clustObject,2), getClusters(clustObject,3), getClusters(clustObject,4), getClusters(clustObject,5))
-#instead using tilda serial
+# Instead using tilda serial
 df_with_clusters <- data.frame(IDlist, getClusters(clustObject,2), getClusters(clustObject,3), getClusters(clustObject,4), getClusters(clustObject,5))
-
+# Make a data frame with the kmeans clusters
 colnames(df_with_clusters) <- c("tilda_serial", "nC2", "nC3", "nC4", "nC5")
 
