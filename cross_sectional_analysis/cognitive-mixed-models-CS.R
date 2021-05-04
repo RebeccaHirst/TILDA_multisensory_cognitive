@@ -199,13 +199,13 @@ SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontro
 #### 2.2 Test significance with likelihood ratio tests ####
 
 # Likelihood ratio test for commission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
-'X2(2)= 8.0939 p  = 0.01748 ( Adjusted commission + omission * SOA model + Age * SOA; AIC = 28578, BIC= 28811; full model; AIC = 28574, BIC = 28822)
+'X2(2)= 8.7395 p  = 0.01265 * ( Baseline model; AIC = 28235, BIC= 28484; full model; AIC = 28230, BIC = 28494)
 Errors of commission do significantly improve model fit whilst controlling for interaction with age
  but not at the corrected alpha criterion level used to adjust for multiple comparisons'
 anova(SOA_SARTom_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_ominteraction_agesexcontrol, SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol)
 
 # Likelihood ratio test for omission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
-'X2(2)= 33.789 p  = 4.6e-08*** ( Adjusted commission + omission * SOA model + Age * SOA; AIC = 28604, BIC= 28836; full model; AIC = 28574, BIC = 28822)
+'X2(2)= 22.855 p  = 1.089e-05 *** (Baseline; AIC = 28249 , BIC= 28498; full model; AIC = 28230, BIC = 28494)
  Errors of omission significantly improve model fit whilst controlling for interaction with age'
 anova(SOA_SARTcom_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_cominteraction_agesexcontrol, SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol)
 
