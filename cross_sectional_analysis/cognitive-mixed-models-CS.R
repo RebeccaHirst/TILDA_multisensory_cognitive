@@ -32,14 +32,33 @@ numextract <- function(string){
 # ph108_W3 - self reported hearing at wave 3
 # ph102 - self reported vision at wave 3
 analysis_df<-tilda_dataW3W1W2W4W5%>% 
-  select(tilda_serial, Shams_2B1F_m230_W3, Shams_2B1F_m150_W3, Shams_2B1F_m70_W3, Shams_2B1F_70_W3, 
-         Shams_2B1F_150_W3, Shams_2B1F_230_W3, 
-         age_W3, sex_W3, edu3_W3, VAS_W3, ph108_W3, ph102_W3, Shams_1B1F_W3, Shams_2B0F_70_W3, 
-         Shams_0B2F_W3, CRTmeancog_W3, CRTmeanmot_W3, COGsartOmmissions_W3, COGsartErrors3_W3,
-         COGtrail2time_W3, COGtrail1time_W3, COGtraildeltatime_W3)
+  select(tilda_serial, # participant ID
+         Shams_2B1F_m230_W3, # accuracy on illusory 2 beep 1 flash (2B1F) SIFI condition at -230 SOA
+         Shams_2B1F_m150_W3, # accuracy on 2B1F SIFI condition at -150 SOA
+         Shams_2B1F_m70_W3, # accuracy on 2B1F SIFI condition at -70 SOA
+         Shams_2B1F_70_W3, # accuracy on 2B1F SIFI condition at +70 SOA
+         Shams_2B1F_150_W3, # accuracy on 2B1F SIFI condition at +150 SOA
+         Shams_2B1F_230_W3, # accuracy on 2B1F SIFI condition at +230 SOA
+         age_W3, # age in years at wave 3
+         sex_W3, # sex
+         edu3_W3, # eductation level
+         VAS_W3, # visual acuity score (100 = 20/20 vision)
+         ph108_W3, # self reported hearing at wave 3
+         ph102_W3, # self reported vision at wave 3
+         Shams_1B1F_W3, # accuracy on non-illusory 1B1F SIFI condition
+         Shams_2B0F_70_W3,  # accuracy on non-illusory 2B0F (70 ms) SIFI condition
+         Shams_0B2F_W3, # accuracy on non-illusory 0B2F (70 ms) SIFI condition
+         CRTmeancog_W3, # CRT cognitive RT at wave 3
+         CRTmeanmot_W3, # CRT motor RT at wave 3
+         COGsartOmmissions_W3, # SART omission errors at wave 3
+         COGsartErrors3_W3, # SART commission errors at wave 3
+         COGtrail2time_W3, # CTT2 time
+         COGtrail1time_W3, # CTT1 time
+         COGtraildeltatime_W3) # CTT delta time
 
-# Make a ratio score of CTT1 and CTT2 # a score higher than 1 indicates the participant was slower in CTT2 relative to CTT1
+# Make a ratio score of CTT1 and CTT2 # score > 1 indicates slower in CTT2 relative to CTT1
 analysis_df$COGtrailratiotime_W3 <- analysis_df$COGtrail2time_W3/analysis_df$COGtrail1time_W3
+# View the ratio score against raw scores to check
 View(cbind(analysis_df$COGtrail1time_W3, analysis_df$COGtrail2time_W3, analysis_df$COGtrailratiotime_W3))
 
 # Reshape to long format for mixed model #
@@ -106,115 +125,48 @@ analysis_df_long_scaled$nTrials<-2
 #### 1.1 Fit mixed models ####
 # Fully adjusted models
 
-# 1.1.1 An additive null model (no cognitive measures) - Adjusted Null model
-SOA_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-  Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 1.1.2 An additive model with MRT and CRT aspects of the CRT - Adjusted CRT + MRT model
-SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + CRTmeancog_W3 + CRTmeanmot_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted baseline interaction model for CRT: MRT * SOA + CRT + SOA + age *SOA + sex * SOA
+SOA_CRTmot_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_motinteraction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + CRTmeancog_W3 + CRTmeanmot_W3 * SOA + sex_W3 * SOA+ edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# Check for multicolinearity in full additive model before including MRT and CRT in same model
-# Correlation between MRT and CRT = -0.210, but this is less than some other variables e.g. MRT and age -0.266
-print(summary(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive), correlation = TRUE)
-
-# 1.1.3 An additive model with MRT aspect of the CRT - Adjusted MRT model
-SOA_CRTmot_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + CRTmeanmot_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted baseline interaction model for MRT: MRT + SOA + CRT * SOA + age *SOA + sex * SOA
+SOA_CRTcog_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_coginteraction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + CRTmeancog_W3 * SOA + CRTmeanmot_W3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# 1.1.4 An additive model with CRT aspect of the CRT - Adjusted CRT model
-SOA_CRTcog_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + CRTmeancog_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# 1.1.5 Adjusted interaction model: MRT * SOA
-SOA_CRTmot_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction <-glmer(
-  Accuracy ~  age_W3 + CRTmeanmot_W3*SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 1.1.6 Adjusted interaction model: CRT * SOA
-SOA_CRTcog_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction <-glmer(
-  Accuracy ~  age_W3 + CRTmeancog_W3*SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 1.1.7 Adjusted interaction model: CRT + MRT * SOA
-SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_motinteraction <-glmer(
-  Accuracy ~  age_W3 + CRTmeancog_W3 + CRTmeanmot_W3 * SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 1.1.8 Adjusted interaction model: MRT + CRT * SOA
-SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_coginteraction <-glmer(
-  Accuracy ~  age_W3 + CRTmeancog_W3 * SOA + CRTmeanmot_W3 + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 1.1.9 Adjusted interaction model: MRT * SOA + CRT * SOA
-SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction <-glmer(
-  Accuracy ~  age_W3 + CRTmeancog_W3 * SOA + CRTmeanmot_W3 * SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted full interaction model: MRT * SOA + CRT * SOA + age *SOA + sex * SOA Note: can take a long time to converge
+SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + CRTmeancog_W3 * SOA + CRTmeanmot_W3 * SOA + sex_W3 * SOA+ edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 #### 1.2 Test significance with likelihood ratio tests ####
-# We can start with the absolute null model and build up OR we can start with the most complex model and strip back
-# If we are to include CRT and MRT in the same model we need to check multicolinearity
 
-# 1.2.1 Likelihood ratio test: Adjusted Null vs. Adjusted CRT model - X2(1)= 2.7592, p = 0.09669
-# No main effect of CRT
-anova(SOA_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CRTcog_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive)
+# Likelihood ratio test: Adjusted baseline interaction model for CRT vs.  Adjusted full interaction model 
+'X2(2)= 19.924 p  = 4.715e-05 *** (Baseline; AIC = 28183, BIC = 28431; Full model; AIC = 28167, BIC = 28431)
+ CRT * SOA interaction  significant when also controlling for the age * SOA interaction and the sex * SOA interaction'
+anova(SOA_CRTmot_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_motinteraction_agesexcontrol, SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol)
 
-# 1.2.2 Likelihood ratio test: Adjusted Null vs. Adjusted MRT model - X2(1)= 16.791, p = 4.173e-05
-# Main effect of MRT (not controlling for CRT)
-anova(SOA_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CRTmot_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive)
+# Likelihood ratio test: Adjusted baseline interaction model for MRT vs.  Adjusted full interaction model  - 
+'X2(2)= 69.585 p = 7.759e-16 *** (Baseline; AIC = 28232, BIC = 28481; Full model; AIC = 28167, BIC = 28431)
+ MRT * SOA interaction still highly significant when also controlling for the age * SOA interaction '
+anova(SOA_CRTcog_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_coginteraction_agesexcontrol, SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol)
 
-# 1.2.3 Likelihood ratio test: Adjusted MRT + SOA model vs Adjusted MRT * SOA model - X2(2)= 258.55 p <2.2e-15
-# Significant interaction of MRT and SOA (not controlling for CRT)
-anova(SOA_CRTmot_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CRTmot_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction)
-
-# 1.2.4 Likelihood ratio test: Adjusted CRT + SOA model vs Adjusted CRT * SOA model - X2(2)= 45.477 p <1.333e-10
-# Significant interaction of CRT and SOA (not controlling for MRT)
-anova(SOA_CRTcog_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CRTcog_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction)
-
-# 1.2.5 Likelihood ratio test: Adjusted CRT + MRT + SOA model vs Adjusted CRT + MRT * SOA model - X2(2)= 258.47. p <2.2e-16
-# Significant interaction of MRT and SOA (controlling for CRT but not interaction between CRT and SOA)
-anova(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_motinteraction)
-
-# 1.2.6 Likelihood ratio test: Adjusted CRT + MRT + SOA model vs Adjusted MRT + CRT * SOA model - X2(2)= 45.399. p <1.386-10
-# Significant interaction of CRT and SOA (controlling for MRT but not interaction between MRT and SOA)
-anova(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_coginteraction)
-
-# 1.2.7 Likelihood ratio test: Adjusted MRT + CRT * SOA model vs. Adjusted MRT * SOA + CRT * SOA model - X2(2)= 223.09. p <2.2e-16
-# Significant interaction of MRT and SOA (controlling for CRT and interaction between CRT and SOA)
-anova(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_coginteraction, SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction)
-
-# 1.2.8 Likelihood ratio test: Adjusted MRT + MRT * SOA model vs. Adjusted MRT * SOA + CRT * SOA model - X2(2)= 10.014 p .0006
-# Significant interaction of CRT and SOA (controlling for MRT and interaction between MRT and SOA)
-anova(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_motinteraction, SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction)
+# Summarize the full best model
+summary(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol)
 
 #### 1.3 Visualize results ####
 
 # Dot whisker plot of full best model
-dwplot(SOA_CRTmot_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction,dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
 # The most complex model
-dwplot(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction,dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
+dwplot(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol,dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
 
 
 #### 2. Cross-sectional analysis of Sustained Attention to Response Time (SART) task ####
@@ -223,96 +175,45 @@ dwplot(SOA_CRTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction,dodge_
 #### 2.1 Fit mixed models ####
 # Fully Adjusted Models
 
-# 2.1.1 An additive model with omission aspect of SART  - Adjusted omission model
-SOA_SARTo_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + COGsartOmmissions_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted baseline interaction model for omissions: omissions + SOA + commissions * SOA + Age * SOA + sex *SOAA
+SOA_SARTcom_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_cominteraction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + COGsartOmmissions_W3 + COGsartErrors3_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# 2.1.2 An additive model with commission aspect of SART  - Adjusted commission model
-SOA_SARTe_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + COGsartErrors3_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted baseline interaction model for commissions: commissions + SOA + omissions * SOA + Age * SOA + sex * SOA
+SOA_SARTom_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_ominteraction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + COGsartOmmissions_W3 * SOA + COGsartErrors3_W3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# 2.1.3 An additive model with commission and omission aspects of SART  - Adjusted commission + omission model
-SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + COGsartErrors3_W3 + COGsartOmmissions_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# Check for multicolinearity in full additive model before including omission and commision in same model
-# Correlation between Commissions and Ommissions = -.485
-print(summary(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive), correlation = TRUE)
-
-# 2.1.4 Adjusted interaction model: commissions * SOA
-SOA_SARTe_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction <-glmer(
-  Accuracy ~  age_W3 + COGsartErrors3_W3 * SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 2.1.5 Adjusted interaction model: omissions * SOA
-SOA_SARTo_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction <-glmer(
-  Accuracy ~  age_W3 + COGsartOmmissions_W3 * SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 2.1.6 Adjusted interaction model: omissions + commissions * SOA
-SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_cominteraction <-glmer(
-  Accuracy ~  age_W3 + COGsartOmmissions_W3 + COGsartErrors3_W3 * SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 2.1.7 Adjusted interaction model: commissions + ommissions * SOA
-SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_ominteraction <-glmer(
-  Accuracy ~  age_W3 + COGsartOmmissions_W3 * SOA + COGsartErrors3_W3 + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 2.1.8 Adjusted interaction model: commissions * SOA + ommissions * SOA
-SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction <-glmer(
-  Accuracy ~  age_W3 + COGsartOmmissions_W3 * SOA + COGsartErrors3_W3 * SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted full interaction model: commissions * SOA + omissions * SOA + Age * SOA + sex * SOA
+SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + COGsartOmmissions_W3 * SOA + COGsartErrors3_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 #### 2.2 Test significance with likelihood ratio tests ####
 
-# 2.2.1 Likelihood ratio test: Adjusted Null vs. Adjusted omission model  X2(1)= 0.848 p = .3571
-anova(SOA_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_SARTo_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive)
+# Likelihood ratio test for commission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
+'X2(2)= 8.0939 p  = 0.01748 ( Adjusted commission + omission * SOA model + Age * SOA; AIC = 28578, BIC= 28811; full model; AIC = 28574, BIC = 28822)
+Errors of commission do significantly improve model fit whilst controlling for interaction with age
+ but not at the corrected alpha criterion level used to adjust for multiple comparisons'
+anova(SOA_SARTom_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_ominteraction_agesexcontrol, SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol)
 
-# 2.2.2 Likelihood ratio test: Adjusted Null vs. Adjusted commission model X2(1)= 2.7667 p = .09624
-anova(SOA_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_SARTe_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive)
-
-# 2.2.3 Likelihood ratio test: Adjusted Commission + SOA model vs Adjusted Commission * SOA model - X2(2)= 94.796 p <2.2e-16
-anova(SOA_SARTe_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_SARTe_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction)
-
-# 2.2.4 Likelihood ratio test: Adjusted ommission + SOA model vs Adjusted ommission * SOA model - X2(2)= 123.28 p <2.2e-16
-anova(SOA_SARTo_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_SARTo_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction)
-
-# 2.2.5 Likelihood ratio test: Adjusted commission + ommission + SOA model vs Adjusted  commission + ommission * SOA model - X2(2)= 123.31 p <2.2e-16
-anova(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_ominteraction)
-
-# 2.2.6 Likelihood ratio test: Adjusted commission + ommission + SOA model vs Adjusted ommission + commission * SOA model - X2(2)= 94.794 p <2.2e-16
-anova(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_cominteraction)
-
-# 2.2.7 Likelihood ratio test: Adjusted ommission + commission * SOA model vs. Adjusted commissions * SOA + ommissions * SOA - X2(2)= 48.968 p  = 2.327e-11
-anova(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_cominteraction, SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction)
-
-# 2.2.8 Likelihood ratio test: Adjusted commission + ommission * SOA model vs. Adjusted commissions * SOA + ommissions * SOA - X2(2)= 20.457 p  = 3.613e-05
-anova(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_ominteraction, SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction)
+# Likelihood ratio test for omission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
+'X2(2)= 33.789 p  = 4.6e-08*** ( Adjusted commission + omission * SOA model + Age * SOA; AIC = 28604, BIC= 28836; full model; AIC = 28574, BIC = 28822)
+ Errors of omission significantly improve model fit whilst controlling for interaction with age'
+anova(SOA_SARTcom_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_cominteraction_agesexcontrol, SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol)
 
 #### 2.3 Visualize results ####
 
 # The most complex model
 dwplot(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
+dwplot(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agecontrol, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
 
 
 #### 3. Cross-sectional analysis of Colour Trails Task (CTT) task ####
@@ -322,95 +223,43 @@ dwplot(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction, dodg
 #### 3.1 Fit mixed models ####
 # Fully Adjusted Models
 
-# 3.1.1 An additive model with CTT1 aspect of CTT  - Adjusted CTT1 model
-SOA_CTT1_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + COGtrail1time_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted baseline interaction model for CTT2: CTT1 * SOA + CTT2 + SOA + Age * SOA
+SOA_CTT1_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTT1interaction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + COGtrail1time_W3 * SOA + COGtrail2time_W3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# 3.1.2 An additive model with CTT2 aspect of CTT  - Adjusted CTT2 model
-SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + COGtrail2time_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted baseline interaction model for CTT1: CTT1 + SOA + CTT2 * SOA + Age * SOA
+SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTT2interaction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + COGtrail1time_W3 + COGtrail2time_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# 3.1.3 An additive model with both CTT1 and CTT2 aspect of CTT  - Adjusted CTT1 + CTT2 model
-SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive <-glmer(
-  Accuracy ~  age_W3 + COGtrail1time_W3 + COGtrail2time_W3 + sex_W3 + edu3_W3 + SOA + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+# Adjusted full interaction model: CTT1 * SOA + CTT2 * SOA + Age * SOA
+SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + COGtrail1time_W3 * SOA + COGtrail2time_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+
 
 #### 3.2 Test significance with likelihood ratio tests ####
 
-# 3.2.1 Likelihood ratio: Adjusted Null model vs. Adjusted CTT1 model
-anova(SOA_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CTT1_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive)
+# Likelihood ratio test for CTT1 * SOA: Adjusted CTT1 + CTT2 * SOA + Age *SOA model vs. Adjusted CTT2 * SOA + CTT1 * SOA + Age *SOA 
+'X2(2) = 5.9261  p  = 0.05166 (CTT1 + CTT2 * SOA AIC = 28528, BIC = 28761; CTT1 * SOA + CTT2 * SOA AIC = 28526, BIC = 28225) - BIC actually higher (poorer) with CTT1 interaction (but non significant)
+CTT1 *SOA interaction does not significantly improve model fit whilst controlling for the Age * SOA interaction'
+anova(SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol, SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTT2interaction_agesexcontrol)
 
-# 3.2.2 Likelihood ratio: Adjusted Null model vs. Adjusted CTT2 model
-anova(SOA_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive)
+# Likelihood ratio test for CTT2 * SOA: Adjusted CTT2 + CTT1 * SOA + Age *SOA model vs. Adjusted CTT1 * SOA + CTT2 * SOA + Age *SOA 
+'X2(2) = 63.41  p  = 1.701e-14 (CTT2 + CTT1 * SOA AIC = 28586, BIC = 28819; CTT1 * SOA + CTT2 * SOA AIC = 28526, BIC = 28775)
+ CTT2 *SOA interaction significantly improves model fit whilst controlling for the Age * SOA interaction'
+anova(SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol, SOA_CTT1_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTT1interaction_agesexcontrol)
 
-# 3.2.3 An interaction model with CTT2 aspect of CTT  - Adjusted CTT2 * SOA model
-SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction <-glmer(
-  Accuracy ~  age_W3 + COGtrail2time_W3*SOA + sex_W3 + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# 3.2.4 Likelihood ratio: Adjusted CTT2 + SOA model vs. Adjusted CTT2 * SOA model
-anova(SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_additive, SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_interaction)
 
 #### 3.3 Visualize results ####
-
-
-
-
-
-# Note: why the warning below when plotting? - because factor header needs to be coerced to character for label?
-# Warning messages:
-#   1: In bind_rows_(x, .id) :
-#   binding factor and character vector, coercing into character vector
-# 2: In bind_rows_(x, .id) :
-#   binding character and factor vector, coercing into character vector
-
-# Can rename the plot labels before plotting 
-dwplot(SOA_CTT2_PP_age_interaction) %>%
-  relabel_predictors(c("age_W3" = "age",                       
-                       "sex_W3Female" = "sex:Female", 
-                       "edu3_W3Secondary" = "edu:Secondary", 
-                       "edu3_W3Third/higher" = "edu:Third/Higher", 
-                       "COGtrail2time_W3" = "CTT2_time", 
-                       "SOA150" = "SOA150",
-                       "SOA230" = "SOA230",
-                       "Pre_Post1" = "Pre_Post1",
-                       "COGtrail2time_W3:SOA150" = "CCT2_time:SOA150",
-                       "COGtrail2time_W3:SOA230" = "CCT2_time:SOA230",
-                       "sd_(intercept).tilda_serial" = "intercept"))
-
-
-#### Supplementary analyses of CTT ####
-
-# Additive model with both CTT1 and CTT2 time - CTT1 + CTT2 model
-SOA_CTT2_CTT1_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 +  COGtrail2time_W3 +  COGtrail1time_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# Likelihood ratio test: CTT1 vs. CTT1 + CTT2 model
-anova(SOA_CTT1_PP_age_additive, SOA_CTT2_CTT1_PP_age_additive)
-
-# Likelihood ratio test: CTT2 vs. CTT1 + CTT2 model
-anova(SOA_CTT2_PP_age_additive, SOA_CTT2_CTT1_PP_age_additive)
-
-# Additive model with the CTT2/CTT1 ratio time - CTT2/CTT1 model
-SOA_CTTratio_PP_age_additive <-glmer(
-  Accuracy ~  age_W3 + sex_W3 + edu3_W3 +  COGtrailratiotime_W3 + SOA + Pre_Post + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
-# compare the CTT2/CTT1 ratio time to the null model # non significant
-# Likelihood ratio test: Null model vs. CTT2/CTT1 model
-anova(SOA_PP_age_sex_edu_additive, SOA_CTTratio_PP_age_additive)
+# The most complex model
+dwplot(SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
 
 
