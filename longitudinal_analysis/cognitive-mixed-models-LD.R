@@ -202,11 +202,6 @@ Animal Naming:
 data:  sextable_transposed
 X-squared = 0.7548, df = 2, p-value = 0.6856
 
-  Dimension     Value          A          B          C
-1         F Residuals  0.7436035 -0.1402399 -0.7449612
-2         F  p values  1.0000000  1.0000000  1.0000000
-3         M Residuals -0.7436035  0.1402399  0.7449612
-4         M  p values  1.0000000  1.0000000  1.0000000
 
 Delayed recall
 

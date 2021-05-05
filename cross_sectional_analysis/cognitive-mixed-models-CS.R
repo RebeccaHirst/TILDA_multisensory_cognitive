@@ -212,9 +212,9 @@ anova(SOA_SARTcom_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_cominteraction_agesexco
 #### 2.3 Visualize results ####
 
 # The most complex model
-dwplot(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
-dwplot(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agecontrol, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
+dwplot(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
 
+summary(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_agesexcontrol)
 
 #### 3. Cross-sectional analysis of Colour Trails Task (CTT) task ####
 # In this model we will explore the effect of various measures of the Color Trails Test (CTT) in relation to SIFI 
@@ -223,7 +223,7 @@ dwplot(SOA_SARTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_bothinteraction_ageco
 #### 3.1 Fit mixed models ####
 # Fully Adjusted Models
 
-# Adjusted baseline interaction model for CTT2: CTT1 * SOA + CTT2 + SOA + Age * SOA
+# Adjusted baseline interaction model for CTT2: CTT1 * SOA + CTT2 + SOA + Age * SOA - failed to converge
 SOA_CTT1_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTT1interaction_agesexcontrol <-glmer(
   Accuracy ~  age_W3 * SOA + COGtrail1time_W3 * SOA + COGtrail2time_W3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
@@ -237,29 +237,61 @@ SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTT2interaction_agesexcontrol <-
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-# Adjusted full interaction model: CTT1 * SOA + CTT2 * SOA + Age * SOA
+# Adjusted full interaction model: CTT1 * SOA + CTT2 * SOA + Age * SOA + SOA * sex - failed to converge
 SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol <-glmer(
   Accuracy ~  age_W3 * SOA + COGtrail1time_W3 * SOA + COGtrail2time_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
+# Because models with CTT1 failed to converge we need to simplify the models
+# Do not include CTT2 in the same model as CTT1 
+
+# Baseline CTT1 model (not controlling for CTT2)
+SOA_CTT1_agesexcontrol_baseline <-glmer(
+  Accuracy ~  age_W3 * SOA + COGtrail1time_W3 + SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+    Shams_0B2F_W3 + (1|tilda_serial), 
+  data = analysis_df_long_scaled, 
+  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+
+# Full CTT1 interaction model (not controlling for CTT2)
+SOA_CTT1_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + COGtrail1time_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+    Shams_0B2F_W3 + (1|tilda_serial), 
+  data = analysis_df_long_scaled, 
+  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+
+# Baseline CTT2 model (not controlling for CTT1)
+SOA_CTT2_agesexcontrol_baseline <-glmer(
+  Accuracy ~  age_W3 * SOA + COGtrail2time_W3 + SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+    Shams_0B2F_W3 + (1|tilda_serial), 
+  data = analysis_df_long_scaled, 
+  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+
+# Full CTT2 interaction model (not controlling for CTT1)
+SOA_CTT2_agesexcontrol <-glmer(
+  Accuracy ~  age_W3 * SOA + COGtrail2time_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+    Shams_0B2F_W3 + (1|tilda_serial), 
+  data = analysis_df_long_scaled, 
+  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 #### 3.2 Test significance with likelihood ratio tests ####
 
 # Likelihood ratio test for CTT1 * SOA: Adjusted CTT1 + CTT2 * SOA + Age *SOA model vs. Adjusted CTT2 * SOA + CTT1 * SOA + Age *SOA 
-'X2(2) = 5.9261  p  = 0.05166 (CTT1 + CTT2 * SOA AIC = 28528, BIC = 28761; CTT1 * SOA + CTT2 * SOA AIC = 28526, BIC = 28225) - BIC actually higher (poorer) with CTT1 interaction (but non significant)
+'X2(2) = 79.65  p  < 2.2e-16 *** (CTT1 + CTT2 * SOA AIC = 28528, BIC = 28761; CTT1 * SOA + CTT2 * SOA AIC = 28526, BIC = 28225) - BIC actually higher (poorer) with CTT1 interaction (but non significant)
 CTT1 *SOA interaction does not significantly improve model fit whilst controlling for the Age * SOA interaction'
-anova(SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol, SOA_CTT2_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTT2interaction_agesexcontrol)
+anova(SOA_CTT1_agesexcontrol_baseline, SOA_CTT1_agesexcontrol )
 
 # Likelihood ratio test for CTT2 * SOA: Adjusted CTT2 + CTT1 * SOA + Age *SOA model vs. Adjusted CTT1 * SOA + CTT2 * SOA + Age *SOA 
-'X2(2) = 63.41  p  = 1.701e-14 (CTT2 + CTT1 * SOA AIC = 28586, BIC = 28819; CTT1 * SOA + CTT2 * SOA AIC = 28526, BIC = 28775)
+'X2(2) = 136.94  p  < 2.2e-16 *** (CTT2 + CTT1 * SOA AIC = 28273, BIC = 28498  CTT1 * SOA + CTT2 * SOA AIC = 28140, BIC = 28381)
  CTT2 *SOA interaction significantly improves model fit whilst controlling for the Age * SOA interaction'
-anova(SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol, SOA_CTT1_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTT1interaction_agesexcontrol)
+anova(SOA_CTT2_agesexcontrol_baseline, SOA_CTT2_agesexcontrol )
 
 
 #### 3.3 Visualize results ####
 # The most complex model
 dwplot(SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
+dwplot(SOA_CTT2_agesexcontrol, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
+dwplot(SOA_CTT1_agesexcontrol, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
 
 
