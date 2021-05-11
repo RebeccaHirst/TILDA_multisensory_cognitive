@@ -21,6 +21,9 @@ Last Edited: 04/05/2021
 
 #rm(list = ls())
 
+# Do you want to store plots of the cognitive variables? If so where (note if TRUE plots take a while to generate)
+store_cog_plots <- FALSE
+
 # Path to store distribution plots of cognitive scores
 pre_outlier_path <- '/Users/rebeccahirst/Documents/TILDA_post_doc/Cognitive_function_paper/updated_analysis/Figures/cognitive_variables/pre_outlier/'
 post_outlier_path <- '/Users/rebeccahirst/Documents/TILDA_post_doc/Cognitive_function_paper/updated_analysis/Figures/cognitive_variables/post_outlier/'
@@ -309,9 +312,10 @@ varList<-c("COGsartCookedMean", "COGsartOmmissions", "COGsartErrors3",
            "COGanimal_naming","COGtrail1errors", "COGtrail2errors", "COGtrail1nearmisses",
            "COGtrail2nearmisses", "COGtrail1prompts", "COGtrail2prompts","COGtrail2colorerrors", "COGnartRawScore", "immediaterecall_total")
 
-
-# Plot and save the cognitive distributions (pre outlier removal)
-plot_cog_distributions(varList, tilda_data, pre_outlier_path)
+if(store_cog_plots){
+  # Plot and save the cognitive distributions (pre outlier removal)
+  plot_cog_distributions(varList, tilda_data, pre_outlier_path) 
+}
 
 # Plot proportion with self reported fair/poor memory (as in https://tilda.tcd.ie/publications/reports/pdf/w4-key-findings-report/Chapter%208.pdf)
 # Make binary fair/poor memory variable
@@ -377,5 +381,7 @@ flow_exclusions(
   percent_of_prev = TRUE
 )
 
-# Plot and save the cognitive distributions (post outlier removal)
-plot_cog_distributions(varList, tilda_data, post_outlier_path)
+if(store_cog_plots){
+  # Plot and save the cognitive distributions (post outlier removal)
+  plot_cog_distributions(varList, tilda_data, post_outlier_path)
+}

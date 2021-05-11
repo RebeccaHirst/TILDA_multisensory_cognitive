@@ -288,6 +288,8 @@ anova(SOA_CTT1_agesexcontrol_baseline, SOA_CTT1_agesexcontrol )
 anova(SOA_CTT2_agesexcontrol_baseline, SOA_CTT2_agesexcontrol )
 
 
+
+
 #### 3.3 Visualize results ####
 # The most complex model
 dwplot(SOA_CTTboth_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_CTTbothinteraction_agesexcontrol, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
