@@ -29,6 +29,29 @@ numextract <- function(string){
   str_extract(string, "\\-*\\d+\\.*\\d*")
 } 
 
+# Convert strings to Title case
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+        sep="", collapse=" ")
+}
+
+# Parameters for saving plots, including outpath
+saveplot <- function(var, plot){
+  ggsave(
+    paste('/Users/rebeccahirst/Documents/TILDA_post_doc/Cognitive_function_paper/updated_analysis/Figures/dotwhiskers/',var,  '.pdf'),
+    plot = plot,
+    device = NULL,
+    path = NULL,
+    scale = 1,
+    width = NA,
+    height = NA,
+    units = c("in", "cm", "mm"),
+    dpi = 300,
+    limitsize = TRUE,
+  )
+}
+
 #### Prep dataframe ####
 
 # dataframes containing each of the cognitive groups (first run cognitive-kml with each variable to get df_with_clusters)
@@ -295,14 +318,14 @@ if(this_cog_measure == "animal naming"){
 #### Fit mixed models ####
 
 # Adjusted baseline model: nC3 + SOA + age *SOA + sex * SOA
-SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexbaseline <-glmer(
+SOA_additive <-glmer(
   Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 # Adjusted full interaction model: nC3 * SOA + age *SOA + sex * SOA
-SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexinteraction <-glmer(
+SOA_interaction <-glmer(
   Accuracy ~  age_W3*SOA + nC3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
@@ -316,7 +339,45 @@ immediate recall X2(4) = 76.274, p =  1.071e-15 *** (baseline; AIC = 28234 BIC =
 '
 # Likelihood ratio test comparing full model to model with key interaction term dropped
 # Running this 3 times for longitudinal models so interpret with corrected alpha of .016
-anova(SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexbaseline, SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexinteraction)
+anova(SOA_additive, SOA_interaction)
 
 # Plot the model results
-dwplot(SOA_nC3_PP_age_sex_edu_VAS_SRv_SRh_controlSIFI_agesexinteraction, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)
+this_dot_whisker <- dwplot(SOA_interaction, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)%>%
+  relabel_predictors("nC3A" = "Trajectory Group [A]",
+                     "nC3B" = "Trajectory Group [B]",
+                     "nC3C" = "Trajectory Group [C]",
+                     "SOA150:nC3A" = "Trajectory Group [A] * SOA [150]",
+                     "SOA230:nC3A" = "Trajectory Group [A] * SOA [230]",
+                     "SOA150:nC3B" = "Trajectory Group [B] * SOA [150]",
+                     "SOA230:nC3B" = "Trajectory Group [B] * SOA [230]",
+                     "SOA150:nC3C" = "Trajectory Group [C] * SOA [150]",
+                     "SOA230:nC3C" = "Trajectory Group [C] * SOA [230]",
+                     "age_W3" = "Age",
+                     "age_W3:SOA150" = "Age * SOA [150]",
+                     "age_W3:SOA230" = "Age * SOA [230]",
+                     "sex_W3Female" = "Sex [Female]",
+                     "SOA150:sex_W3Female" = "Sex [ Female] * SOA [150]",
+                     "SOA230:sex_W3Female" = "Sex [ Female] * SOA [230]",
+                     "edu3_W3Third/higher" = "Edu. [Third/Higher]",
+                     "edu3_W3Secondary" = "Edu. [Secondary]",
+                     "SOA150" = "SOA [150]", 
+                     "SOA230" = "SOA [230]", 
+                     "Pre_Post1" = "Pre/Post [Pre]", 
+                     "VAS_W3" = "VAS",
+                     "ph108_W34" = "SR. hearing [Fair]",
+                     "ph108_W33" = "SR. hearing [Good]",
+                     "ph108_W32" = "SR. hearing [V. Good]",
+                     "ph108_W31" = "SR. hearing [Excellent]",
+                     "ph102_W34" = "SR. vision [Fair]",
+                     "ph102_W33" = "SR. vision [Good]",
+                     "ph102_W32" = "SR. vision [V. Good]",
+                     "ph102_W31" = "SR. vision [Excellent]",
+                     "Shams_1B1F_W30.5" = "1B1F [0.5]",
+                     "Shams_1B1F_W31" = "1B1F [1]",
+                     "Shams_2B0F_70_W31" = "2B0F [1]",
+                     "Shams_2B0F_70_W30.5" = "2B0F [0.5]",
+                     "Shams_0B2F_W31" = "0B2F [1]",
+                     "Shams_0B2F_W30.5" = "0B2F [0.5]",
+                     "sd_(Intercept).tilda_serial" = "(Intercept).participant [SD]") + xlab("Coefficient") + ggtitle(paste("Predicting Accuracy in 1B2F\n", simpleCap(this_cog_measure)))
+
+saveplot(this_cog_measure, this_dot_whisker )
