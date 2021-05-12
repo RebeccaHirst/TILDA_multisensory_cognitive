@@ -47,14 +47,26 @@ saveplot <- function(var, plot){
 }
 
 # custom dwplot settings 
-mydwplot <- function(model, oldvar1, oldvar2, newvar1, newvar2, title){
+mydwplot <- function(model, title){
   dwplot(model, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)%>%
-    relabel_predictors(oldvar1 = newvar1, 
-                       oldvar2 = newvar2,
-                       paste("SOA150:", oldvar1) = paste(newvar1, " * SOA [150]"),
-                       paste("SOA230:", oldvar1) = paste(newvar1, " * SOA [230]"),
-                       paste("SOA150:", oldvar2) = paste(newvar2, " * SOA [150]"),
-                       paste("SOA230:", oldvar2) = paste(newvar2, " * SOA [230]"),
+    relabel_predictors("CRTmeancog_W3" = "CRT [Cognitive]",
+                       "CRTmeanmot_W3" = "CRT [Motor]",
+                       "SOA150:CRTmeancog_W3" = "CRT [Cognitive] * SOA [150]",
+                       "SOA230:CRTmeancog_W3" = "CRT [Cognitive] * SOA [230]",
+                       "SOA150:CRTmeanmot_W3" = "CRT [Motor] * SOA [150]",
+                       "SOA230:CRTmeanmot_W3" = "CRT [Motor] * SOA [230]",
+                       "COGsartOmmissions_W3" = "SART [Ommission]",
+                       "COGsartErrors3_W3"= "SART [Commission]",
+                       "SOA150:COGsartOmmissions_W3" = "SART [Ommission] * SOA [150]",
+                       "SOA230:COGsartOmmissions_W3" = "SART [Ommission] * SOA [230]",
+                       "SOA150:COGsartErrors3_W3" = "SART [Commission] * SOA [150]",
+                       "SOA230:COGsartErrors3_W3" = "SART [Commission] * SOA [230]",
+                       "COGtrail1time_W3" = "CTT1",
+                       "COGtraildeltatime_W3"= "CTT delta",
+                       "SOA150:COGtrail1time_W3" = "CTT1 * SOA [150]",
+                       "SOA230:COGtrail1time_W3" = "CTT1 * SOA [230]",
+                       "SOA150:COGtraildeltatime_W3" = "CTT delta * SOA [150]",
+                       "SOA230:COGtraildeltatime_W3" = "CTT delta * SOA [230]",
                        "age_W3" = "Age",
                        "age_W3:SOA150" = "Age * SOA [150]",
                        "age_W3:SOA230" = "Age * SOA [230]",
@@ -234,7 +246,9 @@ if(!plotting_only){
 
 # Dot whisker plot of full best model
 # The most complex model
-crt_dot_whisker <- mydwplot(SOA_CRTcog_CRTmot_model, "CRTmeancog_W3", "CRTmeanmot_W3", "CRT [Cognitive]", "CRT [Motor]", "Predicting Accuracy in 1B2F\nChoice Response Time")
+
+crt_dot_whisker <- mydwplot(SOA_CRTcog_CRTmot_model, 
+                            "Predicting Accuracy in 1B2F\nChoice Response Time")
 saveplot('CRT', crt_dot_whisker)
 
 #### 2. Cross-sectional analysis of Sustained Attention to Response Time (SART) task ####
@@ -290,7 +304,9 @@ if(!plotting_only){
 
 # The most complex model
 summary(SOA_SARTcom_SARTom_model)
-sart_dot_whisker <- mydwplot(SOA_SARTcom_SARTom_model, "COGsartOmmissions_W3", "COGsartErrors3_W3", "SART [Ommission]", "SART [Commission]", "Predicting Accuracy in 1B2F\nSustained Attention to Response Task")
+
+sart_dot_whisker <- mydwplot(SOA_SARTcom_SARTom_model,  
+                             "Predicting Accuracy in 1B2F\nSustained Attention to Response Task")
 saveplot('SART', sart_dot_whisker)
 
 #### 3. Cross-sectional analysis of Colour Trails Task (CTT) task ####
@@ -380,5 +396,8 @@ Delta, which represents the slowing caused by distractor circles in CTT2 signifi
 # therefore standard deviations) of the random effects determine the sizes of typical
 # deviations from the mean intercept and slope" https://www.stat.cmu.edu/~hseltman/309/Book/chapter15.pdf
 # https://www.theanalysisfactor.com/understanding-random-effects-in-mixed-models/
-ctt_dot_whisker <- mydwplot(SOA_CTT1_CTTdelta_model_original, "COGtrail1time_W3", "COGtraildeltatime_W3", "CTT1", "CTT delta", "Predicting Accuracy in 1B2F\nColor Trails Test")
+
+
+ctt_dot_whisker <- mydwplot(SOA_CTT1_CTTdelta_model_original, 
+                            "Predicting Accuracy in 1B2F\nColor Trails Test")
 saveplot('CTT', ctt_dot_whisker)
