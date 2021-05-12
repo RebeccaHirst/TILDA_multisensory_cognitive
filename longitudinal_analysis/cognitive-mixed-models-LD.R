@@ -10,7 +10,10 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "animal naming"
+this_cog_measure <- "immediate recall"
+
+#If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
+plotting_only <- TRUE
 
 #### Import libraries ####
 library(lme4) # for mixed effects models
@@ -317,12 +320,18 @@ if(this_cog_measure == "animal naming"){
 
 #### Fit mixed models ####
 
-# Adjusted baseline model: nC3 + SOA + age *SOA + sex * SOA
-SOA_additive <-glmer(
-  Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+if(!plotting_only){
+  # If we are only plotting we don't need all of the models (save time, only get full model)
+  
+  # Adjusted baseline model: nC3 + SOA + age *SOA + sex * SOA
+  SOA_additive <-glmer(
+    Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+      Shams_0B2F_W3 + (1|tilda_serial), 
+    data = analysis_df_long_scaled, 
+    family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+  
+  
+}
 
 # Adjusted full interaction model: nC3 * SOA + age *SOA + sex * SOA
 SOA_interaction <-glmer(
@@ -330,16 +339,21 @@ SOA_interaction <-glmer(
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-'
+
+if(!plotting_only){
+  
+  '
 # Does the interaction with cognitive group remain significant after controlling fo the interaction with age and sex
 
 delayed recall X2(4) = 58.834, p = 5.1e-12 ***   (baseline; AIC =28277  BIC = 28509 ; full; AIC = 28226, BIC = 28490
 animal naming X2(4) = 85.559, p < 2.2e-16 *** (baseline; AIC = 28260 BIC =28493 ; full; AIC = 28182, BIC = 28446
 immediate recall X2(4) = 76.274, p =  1.071e-15 *** (baseline; AIC = 28234 BIC = 28467; full; AIC = 28166, BIC = 28430
 '
-# Likelihood ratio test comparing full model to model with key interaction term dropped
-# Running this 3 times for longitudinal models so interpret with corrected alpha of .016
-anova(SOA_additive, SOA_interaction)
+  # Likelihood ratio test comparing full model to model with key interaction term dropped
+  # Running this 3 times for longitudinal models so interpret with corrected alpha of .016
+  anova(SOA_additive, SOA_interaction)
+  
+}
 
 # Plot the model results
 this_dot_whisker <- dwplot(SOA_interaction, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)%>%

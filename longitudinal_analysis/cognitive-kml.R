@@ -15,10 +15,26 @@ Benefits of kml over standard algorithms:
 
 "
 # Type the measure you want to run k means on ('animal naming', 'delayed recall' or 'immediate recall')
-this_cog_measure <- "animal naming"
+this_cog_measure <- "immediate recall"
 
 # Import packages
 library(kml)
+
+# Functions
+saveplot <- function(var, plot){
+  ggsave(
+    paste('/Users/rebeccahirst/Documents/TILDA_post_doc/Cognitive_function_paper/updated_analysis/Figures/KML-results/',var,  '.pdf'),
+    plot = plot,
+    device = NULL,
+    path = NULL,
+    scale = 1,
+    width = NA,
+    height = NA,
+    units = c("in", "cm", "mm"),
+    dpi = 300,
+    limitsize = TRUE,
+  )
+}
 
 # Specify the dataframe based in this_cog_measure (created in select_longitudinal.R)
 if(this_cog_measure == "animal naming"){
@@ -55,10 +71,13 @@ plotAllCriterion(clustObject)
 
 # Plot the trajectories with the selected number of criterion. 
 plot(clustObject,2) 
-plot(clustObject,3) 
+plot(clustObject,3)
 plot(clustObject,4) 
 plot(clustObject,5) 
 
+
+# Save the image of the three cluster plot 
+saveplot(this_cog_measure, plot(clustObject,3))
 
 # Extract group-membership for each cluster IDs 
 df_with_clusters <- data.frame(as.integer(clustObject@idAll), getClusters(clustObject,2), getClusters(clustObject,3), getClusters(clustObject,4), getClusters(clustObject,5))
