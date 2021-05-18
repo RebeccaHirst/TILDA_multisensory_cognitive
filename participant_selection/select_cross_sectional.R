@@ -200,11 +200,11 @@ my_incl_labels_cog<-c(my_incl_labels_cog, 'has MoCa')
 my_excl_labels_cog<-c(my_excl_labels_cog, 'missing MoCa')
 
 # Missing MMSE
-tilda_data<-tilda_data%>% 
-  drop_na(COGmmse)
-my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
-my_incl_labels_cog<-c(my_incl_labels_cog, 'has MMSE')
-my_excl_labels_cog<-c(my_excl_labels_cog, 'missing MMSE')
+# tilda_data<-tilda_data%>% 
+#   drop_na(COGmmse)
+# my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
+# my_incl_labels_cog<-c(my_incl_labels_cog, 'has MMSE')
+# my_excl_labels_cog<-c(my_excl_labels_cog, 'missing MMSE')
 
 # Missing CRT
 tilda_data<-tilda_data%>% 
@@ -221,11 +221,11 @@ my_incl_labels_cog<-c(my_incl_labels_cog, 'has SART')
 my_excl_labels_cog<-c(my_excl_labels_cog, 'missing SART')
 
 # Missing NART
-tilda_data<-tilda_data%>% 
-  drop_na(COGnartRawScore)
-my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
-my_incl_labels_cog<-c(my_incl_labels_cog, 'has NART')
-my_excl_labels_cog<-c(my_excl_labels_cog, 'missing NART')
+# tilda_data<-tilda_data%>% 
+#   drop_na(COGnartRawScore)
+# my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
+# my_incl_labels_cog<-c(my_incl_labels_cog, 'has NART')
+# my_excl_labels_cog<-c(my_excl_labels_cog, 'missing NART')
 
 # Missing CTT
 tilda_data<-tilda_data%>% 
@@ -256,24 +256,24 @@ my_incl_labels_cog<-c(my_incl_labels_cog, 'has Delayed recall')
 my_excl_labels_cog<-c(my_excl_labels_cog, 'missing Delayed recall')
 
 # Missing prospective memory
-tilda_data<-tilda_data%>% 
-  drop_na(COGprosmem1, COGprosmem2)
-my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
-my_incl_labels_cog<-c(my_incl_labels_cog, 'has prospective memory')
-my_excl_labels_cog<-c(my_excl_labels_cog, 'missing prospective memory')
+# tilda_data<-tilda_data%>% 
+#   drop_na(COGprosmem1, COGprosmem2)
+# my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
+# my_incl_labels_cog<-c(my_incl_labels_cog, 'has prospective memory')
+# my_excl_labels_cog<-c(my_excl_labels_cog, 'missing prospective memory')
 
 # Missing or responsed 'don't know' (DK) to self-reported day-to-day memory
-tilda_data<-tilda_data[!(tilda_data$ph114==98),]
-my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
-my_incl_labels_cog<-c(my_incl_labels_cog, 'has self reported day-to-day memory')
-my_excl_labels_cog<-c(my_excl_labels_cog, 'DK self reported day-to-day memory')
-
-# Missing or responsed 'don't know' (DK) to self-reported memory decline
-tilda_data<-tilda_data[!(tilda_data$ph142==98),]
-tilda_data<-tilda_data[!(tilda_data$ph142==-1),]
-my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
-my_incl_labels_cog<-c(my_incl_labels_cog, 'has self memory decline since last interview')
-my_excl_labels_cog<-c(my_excl_labels_cog, 'DK self memory decline or no previous interview')
+# tilda_data<-tilda_data[!(tilda_data$ph114==98),]
+# my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
+# my_incl_labels_cog<-c(my_incl_labels_cog, 'has self reported day-to-day memory')
+# my_excl_labels_cog<-c(my_excl_labels_cog, 'DK self reported day-to-day memory')
+# 
+# # Missing or responsed 'don't know' (DK) to self-reported memory decline
+# tilda_data<-tilda_data[!(tilda_data$ph142==98),]
+# tilda_data<-tilda_data[!(tilda_data$ph142==-1),]
+# my_incl_counts_cog<-c(my_incl_counts_cog, nrow(tilda_data))
+# my_incl_labels_cog<-c(my_incl_labels_cog, 'has self memory decline since last interview')
+# my_excl_labels_cog<-c(my_excl_labels_cog, 'DK self memory decline or no previous interview')
 
 #### Make exclusion figures ####
 
@@ -319,9 +319,9 @@ if(store_cog_plots){
 
 # Plot proportion with self reported fair/poor memory (as in https://tilda.tcd.ie/publications/reports/pdf/w4-key-findings-report/Chapter%208.pdf)
 # Make binary fair/poor memory variable
-tilda_data$fair_or_poor_memory<-ifelse(tilda_data$ph114>=4, 1, 0)
-ageByMem<-table(tilda_data$fair_or_poor_memory, tilda_data$age3)
-propotionMem<-ageByMem[2,]/ageByMem[1,]
+# tilda_data$fair_or_poor_memory<-ifelse(tilda_data$ph114>=4, 1, 0)
+# ageByMem<-table(tilda_data$fair_or_poor_memory, tilda_data$age3)
+# propotionMem<-ageByMem[2,]/ageByMem[1,]
 
 #### Exclude based on outlying cognitive measures ####
 

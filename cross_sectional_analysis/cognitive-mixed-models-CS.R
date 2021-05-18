@@ -11,15 +11,19 @@ The analysis comprises of three parts, with similar structure for each:
   3. Cross-sectional analysis of Colour Trials Test (CTT)
 
 All models are run fully adjusted for covariates. 
+
+NOTE: make a folder in your working directory named 'figures' and 'tables' to automatically save results in pdf/word tables
+
 "
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
-plotting_only <- TRUE
+plotting_only <- FALSE
 
 #### import libraries ####
 
 library(lme4) # lme4 library for the mixed effects models
 library(dotwhisker) # for dot whisker plots of results 
+library(sjPlot) #For making html tables of results
 
 #### Functions ####
 # A set of custom functions used throughout analysis
@@ -30,10 +34,15 @@ numextract <- function(string){
   str_extract(string, "\\-*\\d+\\.*\\d*")
 } 
 
-# Parameters for saving plots, including outpath
+# Automatically save plots to a directory named figures/tables in the current working directory
+current_directory <- dirname(rstudioapi::getSourceEditorContext()$path)
+path_breaks <- which(strsplit(current_directory, "")[[1]]=="/")
+plot_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'figures/', sep = '')
+table_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'tables/', sep = '')
+
 saveplot <- function(var, plot){
   ggsave(
-    paste('/Users/rebeccahirst/Documents/TILDA_post_doc/Cognitive_function_paper/updated_analysis/Figures/dotwhiskers/',var,  '.pdf'),
+    paste(plot_outpath, var,  '.pdf', sep = ''),
     plot = plot,
     device = NULL,
     path = NULL,
@@ -45,55 +54,30 @@ saveplot <- function(var, plot){
     limitsize = TRUE,
   )
 }
+# myplot
+myplot <- function(model, var1, var2){
+  plot_model(model, dot.size = 1,
+             axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
+                                 "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
+                                 "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
+                                 "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
+                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
+                                 "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
+                                 paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
+                                 "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 1B2F\n", var1,'and', var2))
+}
 
-# custom dwplot settings 
-mydwplot <- function(model, title){
-  dwplot(model, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)%>%
-    relabel_predictors("CRTmeancog_W3" = "CRT [Cognitive]",
-                       "CRTmeanmot_W3" = "CRT [Motor]",
-                       "SOA150:CRTmeancog_W3" = "CRT [Cognitive] * SOA [150]",
-                       "SOA230:CRTmeancog_W3" = "CRT [Cognitive] * SOA [230]",
-                       "SOA150:CRTmeanmot_W3" = "CRT [Motor] * SOA [150]",
-                       "SOA230:CRTmeanmot_W3" = "CRT [Motor] * SOA [230]",
-                       "COGsartOmmissions_W3" = "SART [Ommission]",
-                       "COGsartErrors3_W3"= "SART [Commission]",
-                       "SOA150:COGsartOmmissions_W3" = "SART [Ommission] * SOA [150]",
-                       "SOA230:COGsartOmmissions_W3" = "SART [Ommission] * SOA [230]",
-                       "SOA150:COGsartErrors3_W3" = "SART [Commission] * SOA [150]",
-                       "SOA230:COGsartErrors3_W3" = "SART [Commission] * SOA [230]",
-                       "COGtrail1time_W3" = "CTT1",
-                       "COGtraildeltatime_W3"= "CTT delta",
-                       "SOA150:COGtrail1time_W3" = "CTT1 * SOA [150]",
-                       "SOA230:COGtrail1time_W3" = "CTT1 * SOA [230]",
-                       "SOA150:COGtraildeltatime_W3" = "CTT delta * SOA [150]",
-                       "SOA230:COGtraildeltatime_W3" = "CTT delta * SOA [230]",
-                       "age_W3" = "Age",
-                       "age_W3:SOA150" = "Age * SOA [150]",
-                       "age_W3:SOA230" = "Age * SOA [230]",
-                       "sex_W3Female" = "Sex [Female]",
-                       "SOA150:sex_W3Female" = "Sex [ Female] * SOA [150]",
-                       "SOA230:sex_W3Female" = "Sex [ Female] * SOA [230]",
-                       "edu3_W3Third/higher" = "Edu. [Third/Higher]",
-                       "edu3_W3Secondary" = "Edu. [Secondary]",
-                       "SOA150" = "SOA [150]", 
-                       "SOA230" = "SOA [230]", 
-                       "Pre_Post1" = "Pre/Post [Pre]", 
-                       "VAS_W3" = "VAS",
-                       "ph108_W34" = "SR. hearing [Fair]",
-                       "ph108_W33" = "SR. hearing [Good]",
-                       "ph108_W32" = "SR. hearing [V. Good]",
-                       "ph108_W31" = "SR. hearing [Excellent]",
-                       "ph102_W34" = "SR. vision [Fair]",
-                       "ph102_W33" = "SR. vision [Good]",
-                       "ph102_W32" = "SR. vision [V. Good]",
-                       "ph102_W31" = "SR. vision [Excellent]",
-                       "Shams_1B1F_W30.5" = "1B1F [0.5]",
-                       "Shams_1B1F_W31" = "1B1F [1]",
-                       "Shams_2B0F_70_W31" = "2B0F [1]",
-                       "Shams_2B0F_70_W30.5" = "2B0F [0.5]",
-                       "Shams_0B2F_W31" = "0B2F [1]",
-                       "Shams_0B2F_W30.5" = "0B2F [0.5]",
-                       "sd_(Intercept).tilda_serial" = "(Intercept).participant [SD]") + xlab("Coefficient") + ggtitle("Predicting Accuracy in 1B2F\nChoice Response Time")
+# mytable
+mytable <- function(model, var1, var2){
+  tab_model(model, file = paste(table_outpath, var1, '.doc', sep = ''),
+             pred.labels = c("Intercept", "Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
+                                 "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
+                                 "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
+                                 "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
+                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
+                                 "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
+                                 paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
+                                 "Sex [Female] * SOA [230]"))
 }
 
 #### Prep dataframe ####
@@ -229,12 +213,12 @@ if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
   
   # Likelihood ratio test: Adjusted baseline interaction model for CRT vs.  Adjusted full interaction model 
-  'X2(2)= 19.924 p  = 4.715e-05 *** (Baseline; AIC = 28183, BIC = 28431; Full model; AIC = 28167, BIC = 28431)
+  'X2(2)= 18.306 p  = 0.0001059 (Baseline; AIC = 28550, BIC = 28798; Full model; AIC = 28536, BIC = 28800)
   CRT * SOA interaction  significant when also controlling for the age * SOA interaction and the sex * SOA interaction'
   anova(SOA_CRTmot_model, SOA_CRTcog_CRTmot_model)
   
   # Likelihood ratio test: Adjusted baseline interaction model for MRT vs.  Adjusted full interaction model  - 
-  'X2(2)= 69.585 p = 7.759e-16 *** (Baseline; AIC = 28232, BIC = 28481; Full model; AIC = 28167, BIC = 28431)
+  'X2(2)= 75.641 p < 2.2e-16 *** (Baseline; AIC = 28607, BIC = 28856; Full model; AIC = 28536, BIC = 28800)
   MRT * SOA interaction still highly significant when also controlling for the age * SOA interaction '
   anova(SOA_CRTcog_model, SOA_CRTcog_CRTmot_model)
   
@@ -246,10 +230,12 @@ if(!plotting_only){
 
 # Dot whisker plot of full best model
 # The most complex model
+# The most complex model
+mytable(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]')
 
-crt_dot_whisker <- mydwplot(SOA_CRTcog_CRTmot_model, 
-                            "Predicting Accuracy in 1B2F\nChoice Response Time")
-saveplot('CRT', crt_dot_whisker)
+sart_oddsratio <-myplot(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]')
+saveplot('SART', sart_oddsratio)
+
 
 #### 2. Cross-sectional analysis of Sustained Attention to Response Time (SART) task ####
 # These models explore the error and omission elements of the SART in relation to SIFI 
@@ -288,13 +274,13 @@ if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
   
   # Likelihood ratio test for commission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
-  'X2(2)= 8.7395 p  = 0.01265 * ( Baseline model; AIC = 28235, BIC= 28484; full model; AIC = 28230, BIC = 28494)
+  'X2(2)= 9.0502 p  = 0.01083 * ( Baseline model; AIC = 28610, BIC= 28859; full model; AIC = 28605, BIC = 28870)
   Errors of commission do significantly improve model fit whilst controlling for interaction with age
   but not at the corrected alpha criterion level used to adjust for multiple comparisons'
   anova(SOA_SARTom_model, SOA_SARTcom_SARTom_model)
   
   # Likelihood ratio test for omission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
-  'X2(2)= 22.855 p  = 1.089e-05 *** (Baseline; AIC = 28249 , BIC= 28498; full model; AIC = 28230, BIC = 28494)
+  'X2(2)= 22.461p  = 1.327e-05 *** (Baseline; AIC = 28624, BIC= 28872; full model; AIC = 28605, BIC = 28870)
   Errors of omission significantly improve model fit whilst controlling for interaction with age'
   anova(SOA_SARTcom_model, SOA_SARTcom_SARTom_model)
   
@@ -303,11 +289,10 @@ if(!plotting_only){
 #### 2.3 Visualize results ####
 
 # The most complex model
-summary(SOA_SARTcom_SARTom_model)
+mytable(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions')
 
-sart_dot_whisker <- mydwplot(SOA_SARTcom_SARTom_model,  
-                             "Predicting Accuracy in 1B2F\nSustained Attention to Response Task")
-saveplot('SART', sart_dot_whisker)
+sart_oddsratio <-myplot(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions')
+saveplot('SART', sart_oddsratio)
 
 #### 3. Cross-sectional analysis of Colour Trails Task (CTT) task ####
 # In this model we will explore the effect of various measures of the Color Trails Test (CTT) in relation to SIFI 
@@ -347,14 +332,14 @@ if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
   
   # Baseline CTT1 whilst controlling for delta interaction model 
-  SOA_CTT1_model_original <-glmer(
+  SOA_CTT1_model <-glmer(
     Accuracy ~  age_W3 * SOA + COGtrail1time_W3 + COGtraildeltatime_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
       Shams_0B2F_W3 + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
   # Baseline CTT delta whilst controlling for CTT interaction model 
-  SOA_CTTdelta_model_original <-glmer(
+  SOA_CTTdelta_model <-glmer(
     Accuracy ~  age_W3 * SOA + COGtrail1time_W3*SOA + COGtraildeltatime_W3 + SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
       Shams_0B2F_W3 + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
@@ -363,7 +348,7 @@ if(!plotting_only){
 }
 
 # Full CTT1*SOA and delta * SOA interaction model 
-SOA_CTT1_CTTdelta_model_original <-glmer(
+SOA_CTT1_CTTdelta_model <-glmer(
   Accuracy ~  age_W3 * SOA + COGtrail1time_W3*SOA + COGtraildeltatime_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
     Shams_0B2F_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
@@ -374,14 +359,14 @@ SOA_CTT1_CTTdelta_model_original <-glmer(
 if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
   # Likelihood ratio test for CTTdelta * SOA whilst controlling for CTT1 * SOA: Adjusted CTTdelta SOA + Age *SOA model + Sex * SOA vs. Adjusted CTTdelta * SOA + Age *SOA + Sex * SOA
-  'X2(2) = 79.369  p  < 2.2e-16 *** (CTTdelta + SOA AIC = 28458, BIC = 28458  CTTdelta * SOA AIC = 28135, BIC = 28398)
+  'X2(2) = 87.396  p  < 2.2e-16 ***(CTTdelta + SOA AIC = 28575, BIC = 28823 CTTdelta * SOA AIC = 28491, BIC = 28755)
 CTT1, processing speed significantly improves model fit whilst controlling the delta * SOA term'
-  anova(SOA_CTT1_model_original, SOA_CTT1_CTTdelta_model_original)
+  anova(SOA_CTT1_model, SOA_CTT1_CTTdelta_model)
   
   # Likelihood ratio test for CTT1 * SOA whilst controlling for CTTdelta * SOA: Adjusted CTT1 SOA + Age *SOA model + Sex * SOA vs. Adjusted CTT1 * SOA + Age *SOA + Sex * SOA
-  'X2(2) = 67.439  p  = 2.269e-15 ***(CTTdelta + SOA AIC = 28198, BIC = 28446  CTTdelta * SOA AIC = 28135, BIC = 28398)
+  'X2(2) = 74.02  p  = < 2.2e-16 ***(CTTdelta + SOA AIC = 28561, BIC = 28810 CTTdelta * SOA AIC = 28491, BIC = 28755)
 Delta, which represents the slowing caused by distractor circles in CTT2 significantly improves model fit whilst controlling the CTT1*SOA term'
-  anova(SOA_CTTdelta_model_original, SOA_CTT1_CTTdelta_model_original)
+  anova(SOA_CTTdelta_model, SOA_CTT1_CTTdelta_model)
   
 }
 
@@ -397,7 +382,13 @@ Delta, which represents the slowing caused by distractor circles in CTT2 signifi
 # deviations from the mean intercept and slope" https://www.stat.cmu.edu/~hseltman/309/Book/chapter15.pdf
 # https://www.theanalysisfactor.com/understanding-random-effects-in-mixed-models/
 
-
-ctt_dot_whisker <- mydwplot(SOA_CTT1_CTTdelta_model_original, 
-                            "Predicting Accuracy in 1B2F\nColor Trails Test")
-saveplot('CTT', ctt_dot_whisker)
+# Saves word table of final model - NOTE: saves odds ratio not estimates
+# The coefficients are in this case automatically converted (exponentiated). 
+mytable(SOA_CTT1_CTTdelta_model_original, 'CTT1', 'CTT delta')
+# Also save non transformed (log odds)
+#tab_model(SOA_CTT1_CTTdelta_model_original, file = paste(table_outpath, 'CTT-non-transformed.doc'), transform = NULL)
+# https://strengejacke.github.io/sjPlot/articles/plot_model_estimates.html
+#plot_model(SOA_CTT1_CTTdelta_model_original, dot.size = 1)
+# save a plot of the odds ratios
+ctt_oddsratio <-myplot(SOA_CTT1_CTTdelta_model_original, 'CTT1', 'CTT delta')
+saveplot('CTT', ctt_oddsratio)

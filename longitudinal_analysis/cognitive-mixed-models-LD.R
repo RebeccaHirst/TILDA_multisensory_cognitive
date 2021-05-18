@@ -42,7 +42,7 @@ simpleCap <- function(x) {
 # Parameters for saving plots, including outpath
 saveplot <- function(var, plot){
   ggsave(
-    paste('/Users/rebeccahirst/Documents/TILDA_post_doc/Cognitive_function_paper/updated_analysis/Figures/dotwhiskers/',var,  '.pdf'),
+    paste('figures/',var,  '.pdf'),
     plot = plot,
     device = NULL,
     path = NULL,
@@ -393,5 +393,6 @@ this_dot_whisker <- dwplot(SOA_interaction, dodge_size = 1, vline=geom_vline(xin
                      "Shams_0B2F_W31" = "0B2F [1]",
                      "Shams_0B2F_W30.5" = "0B2F [0.5]",
                      "sd_(Intercept).tilda_serial" = "(Intercept).participant [SD]") + xlab("Coefficient") + ggtitle(paste("Predicting Accuracy in 1B2F\n", simpleCap(this_cog_measure)))
+
 
 saveplot(this_cog_measure, this_dot_whisker )
