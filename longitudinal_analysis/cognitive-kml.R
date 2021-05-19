@@ -15,15 +15,20 @@ Benefits of kml over standard algorithms:
 
 "
 # Type the measure you want to run k means on ('animal naming', 'delayed recall' or 'immediate recall')
-this_cog_measure <- "immediate recall"
+this_cog_measure <- "animal naming"
 
 # Import packages
 library(kml)
 
 # Functions
+# Automatically save plots to a directory named figures/tables in the current working directory
+current_directory <- dirname(rstudioapi::getSourceEditorContext()$path)
+path_breaks <- which(strsplit(current_directory, "")[[1]]=="/")
+plot_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'figures/', sep = '')
+
 saveplot <- function(var, plot){
   ggsave(
-    paste('/Users/rebeccahirst/Documents/TILDA_post_doc/Cognitive_function_paper/updated_analysis/Figures/KML-results/',var,  '.pdf'),
+    paste(plot_outpath, var,  '.pdf', sep = ''),
     plot = plot,
     device = NULL,
     path = NULL,
@@ -77,7 +82,7 @@ plot(clustObject,5)
 
 
 # Save the image of the three cluster plot 
-saveplot(this_cog_measure, plot(clustObject,3))
+saveplot(paste(this_cog_measure, '-kml', sep = ''), plot(clustObject,3))
 
 # Extract group-membership for each cluster IDs 
 df_with_clusters <- data.frame(as.integer(clustObject@idAll), getClusters(clustObject,2), getClusters(clustObject,3), getClusters(clustObject,4), getClusters(clustObject,5))

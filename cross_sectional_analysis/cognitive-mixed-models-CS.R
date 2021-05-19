@@ -68,8 +68,8 @@ myplot <- function(model, var1, var2){
 }
 
 # mytable
-mytable <- function(model, var1, var2){
-  tab_model(model, file = paste(table_outpath, var1, '.doc', sep = ''),
+mytable <- function(model, var1, var2, plotname){
+  tab_model(model, file = paste(table_outpath, plotname, '.doc', sep = ''),
              pred.labels = c("Intercept", "Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
                                  "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
                                  "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
@@ -231,7 +231,7 @@ if(!plotting_only){
 # Dot whisker plot of full best model
 # The most complex model
 # The most complex model
-mytable(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]')
+mytable(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]', 'CRT')
 
 sart_oddsratio <-myplot(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]')
 saveplot('SART', sart_oddsratio)
@@ -289,7 +289,7 @@ if(!plotting_only){
 #### 2.3 Visualize results ####
 
 # The most complex model
-mytable(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions')
+mytable(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions', 'SART')
 
 sart_oddsratio <-myplot(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions')
 saveplot('SART', sart_oddsratio)
@@ -384,7 +384,7 @@ Delta, which represents the slowing caused by distractor circles in CTT2 signifi
 
 # Saves word table of final model - NOTE: saves odds ratio not estimates
 # The coefficients are in this case automatically converted (exponentiated). 
-mytable(SOA_CTT1_CTTdelta_model_original, 'CTT1', 'CTT delta')
+mytable(SOA_CTT1_CTTdelta_model_original, 'CTT1', 'CTT delta', 'CTT')
 # Also save non transformed (log odds)
 #tab_model(SOA_CTT1_CTTdelta_model_original, file = paste(table_outpath, 'CTT-non-transformed.doc'), transform = NULL)
 # https://strengejacke.github.io/sjPlot/articles/plot_model_estimates.html

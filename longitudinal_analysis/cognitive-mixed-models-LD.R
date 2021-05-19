@@ -10,10 +10,10 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "immediate recall"
+this_cog_measure <- "animal naming"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
-plotting_only <- TRUE
+plotting_only <- FALSE
 
 #### Import libraries ####
 library(lme4) # for mixed effects models
@@ -22,6 +22,7 @@ library(dotwhisker) # for dwplot
 library(chisq.posthoc.test) # for posthoc comparisons of chi squared
 library(car) # for levenes test
 library(FSA) # for dunns test
+library(sjPlot) #For making html tables of results
 
 #### Functions ####
 # A set of custom functions used throughout analysis
@@ -40,9 +41,15 @@ simpleCap <- function(x) {
 }
 
 # Parameters for saving plots, including outpath
+# Automatically save plots to a directory named figures/tables in the current working directory
+current_directory <- dirname(rstudioapi::getSourceEditorContext()$path)
+path_breaks <- which(strsplit(current_directory, "")[[1]]=="/")
+plot_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'figures/', sep = '')
+table_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'tables/', sep = '')
+
 saveplot <- function(var, plot){
   ggsave(
-    paste('figures/',var,  '.pdf'),
+    paste(plot_outpath, var,  '.pdf', sep = ''),
     plot = plot,
     device = NULL,
     path = NULL,
@@ -53,6 +60,32 @@ saveplot <- function(var, plot){
     dpi = 300,
     limitsize = TRUE,
   )
+}
+
+# myplot
+myplot <- function(model, var1, var2){
+  plot_model(model, dot.size = 1,
+             axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
+                                 "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
+                                 "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
+                                 "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
+                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
+                                 "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
+                                 paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
+                                 "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 1B2F\n", var1,'and', var2))
+}
+
+# mytable
+mytable <- function(model, var1, var2, plotname){
+  tab_model(model, file = paste(table_outpath, plotname, '.doc', sep = ''),
+            pred.labels = c("Intercept", "Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
+                            "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
+                            "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
+                            "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
+                            "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
+                            "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
+                            paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
+                            "Sex [Female] * SOA [230]"))
 }
 
 #### Prep dataframe ####
@@ -345,9 +378,9 @@ if(!plotting_only){
   '
 # Does the interaction with cognitive group remain significant after controlling fo the interaction with age and sex
 
-delayed recall X2(4) = 58.834, p = 5.1e-12 ***   (baseline; AIC =28277  BIC = 28509 ; full; AIC = 28226, BIC = 28490
+delayed recall X2(4) = 65.514 , p = 2.005e-13 ***  (baseline; AIC =28651  BIC = 28884; full; AIC = 28593 , BIC = 28858
 animal naming X2(4) = 85.559, p < 2.2e-16 *** (baseline; AIC = 28260 BIC =28493 ; full; AIC = 28182, BIC = 28446
-immediate recall X2(4) = 76.274, p =  1.071e-15 *** (baseline; AIC = 28234 BIC = 28467; full; AIC = 28166, BIC = 28430
+immediate recall X2(4) = 89.198, p < 2.2e-16 *** (baseline; AIC = 28608 BIC = 28841; full; AIC = 28527, BIC = 28791
 '
   # Likelihood ratio test comparing full model to model with key interaction term dropped
   # Running this 3 times for longitudinal models so interpret with corrected alpha of .016
@@ -355,44 +388,13 @@ immediate recall X2(4) = 76.274, p =  1.071e-15 *** (baseline; AIC = 28234 BIC =
   
 }
 
-# Plot the model results
-this_dot_whisker <- dwplot(SOA_interaction, dodge_size = 1, vline=geom_vline(xintercept=0, colour="grey60", linetype=2),dot_args = list(aes(shape = model)), show_intercept = TRUE)%>%
-  relabel_predictors("nC3A" = "Trajectory Group [A]",
-                     "nC3B" = "Trajectory Group [B]",
-                     "nC3C" = "Trajectory Group [C]",
-                     "SOA150:nC3A" = "Trajectory Group [A] * SOA [150]",
-                     "SOA230:nC3A" = "Trajectory Group [A] * SOA [230]",
-                     "SOA150:nC3B" = "Trajectory Group [B] * SOA [150]",
-                     "SOA230:nC3B" = "Trajectory Group [B] * SOA [230]",
-                     "SOA150:nC3C" = "Trajectory Group [C] * SOA [150]",
-                     "SOA230:nC3C" = "Trajectory Group [C] * SOA [230]",
-                     "age_W3" = "Age",
-                     "age_W3:SOA150" = "Age * SOA [150]",
-                     "age_W3:SOA230" = "Age * SOA [230]",
-                     "sex_W3Female" = "Sex [Female]",
-                     "SOA150:sex_W3Female" = "Sex [ Female] * SOA [150]",
-                     "SOA230:sex_W3Female" = "Sex [ Female] * SOA [230]",
-                     "edu3_W3Third/higher" = "Edu. [Third/Higher]",
-                     "edu3_W3Secondary" = "Edu. [Secondary]",
-                     "SOA150" = "SOA [150]", 
-                     "SOA230" = "SOA [230]", 
-                     "Pre_Post1" = "Pre/Post [Pre]", 
-                     "VAS_W3" = "VAS",
-                     "ph108_W34" = "SR. hearing [Fair]",
-                     "ph108_W33" = "SR. hearing [Good]",
-                     "ph108_W32" = "SR. hearing [V. Good]",
-                     "ph108_W31" = "SR. hearing [Excellent]",
-                     "ph102_W34" = "SR. vision [Fair]",
-                     "ph102_W33" = "SR. vision [Good]",
-                     "ph102_W32" = "SR. vision [V. Good]",
-                     "ph102_W31" = "SR. vision [Excellent]",
-                     "Shams_1B1F_W30.5" = "1B1F [0.5]",
-                     "Shams_1B1F_W31" = "1B1F [1]",
-                     "Shams_2B0F_70_W31" = "2B0F [1]",
-                     "Shams_2B0F_70_W30.5" = "2B0F [0.5]",
-                     "Shams_0B2F_W31" = "0B2F [1]",
-                     "Shams_0B2F_W30.5" = "0B2F [0.5]",
-                     "sd_(Intercept).tilda_serial" = "(Intercept).participant [SD]") + xlab("Coefficient") + ggtitle(paste("Predicting Accuracy in 1B2F\n", simpleCap(this_cog_measure)))
-
-
-saveplot(this_cog_measure, this_dot_whisker )
+# Plot and save figures and tables of model results
+if(this_cog_measure == "animal naming"){
+  mytable(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [B]", this_cog_measure)
+  oddsratio_plot <-myplot(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [B]")
+  }else{
+    mytable(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [C]", this_cog_measure)
+  oddsratio_plot <-myplot(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [C]")
+  }
+  
+saveplot(this_cog_measure, oddsratio_plot)
