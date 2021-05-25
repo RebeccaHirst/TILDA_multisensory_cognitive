@@ -57,6 +57,7 @@ saveplot <- function(var, plot){
 # myplot
 myplot <- function(model, var1, var2){
   plot_model(model, dot.size = 1,
+             terms = c("age_w3", "SOA [150]", "SOA [230]", var1, var2),
              axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
                                  "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
                                  "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
@@ -67,6 +68,19 @@ myplot <- function(model, var1, var2){
                                  "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 1B2F\n", var1,'and', var2))
 }
 
+# myplot_reduced (to limit the terms plotted - for slide presentations)
+myplot_reduced <- function(model, var1, var2, var1_newname, var2_newname){
+  plot_model(model, terms = c("age_W3", "SOA [150]", "SOA [230]", "sex_W3 [Female]", "age_W3:SOA [150]", 
+                                              "age_W3:SOA [230]", "SOA150:sex_W3Female", "SOA230:sex_W3Female", 
+                                              paste("SOA230:", var1, sep = ''), 
+                                              paste("SOA150:", var2, sep = ''), 
+                                              paste("SOA230:", var2, sep = ''), 
+                                              paste("SOA150:", var1, sep = ''), var1, var2),
+           axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1_newname, var2_newname, "Sex [Female]", "Age * SOA [150]",
+                               "Age * SOA [230]", paste("SOA [150] * ", var1_newname), paste("SOA [230] * ", var1_newname),
+                               paste("SOA [150] * ", var2_newname), paste("SOA [230] * ", var2_newname), "Sex [Female] * SOA [150]",
+                               "Sex [Female] * SOA [230]"))) + ggtitle(paste("Predicting Accuracy in 1B2F\n", var1_newname,'and', var2_newname))
+}
 # mytable
 mytable <- function(model, var1, var2, plotname){
   tab_model(model, file = paste(table_outpath, plotname, '.doc', sep = ''),
@@ -233,9 +247,11 @@ if(!plotting_only){
 # The most complex model
 mytable(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]', 'CRT')
 
-sart_oddsratio <-myplot(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]')
-saveplot('SART', sart_oddsratio)
+crt_oddsratio <-myplot(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]')
+saveplot('CRT', crt_oddsratio)
 
+crt_oddsratio_selected <-myplot_reduced(SOA_CRTcog_CRTmot_model, "CRTmeancog_W3", "CRTmeanmot_W3", 'CRT [Cognitive]', 'CRT [Motor]')
+saveplot('CRT_selectedTerms', crt_oddsratio_selected)
 
 #### 2. Cross-sectional analysis of Sustained Attention to Response Time (SART) task ####
 # These models explore the error and omission elements of the SART in relation to SIFI 
@@ -293,6 +309,10 @@ mytable(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions', 'SART')
 
 sart_oddsratio <-myplot(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions')
 saveplot('SART', sart_oddsratio)
+
+# Plot with reduced terms for clearer use in presentations
+sart_oddsratio_selected <-myplot_reduced(SOA_SARTcom_SARTom_model, "COGsartOmmissions_W3", "COGsartErrors3_W3", 'SART ommissions', 'SART comissions')
+saveplot('SART_selectedTerms', sart_oddsratio_selected)
 
 #### 3. Cross-sectional analysis of Colour Trails Task (CTT) task ####
 # In this model we will explore the effect of various measures of the Color Trails Test (CTT) in relation to SIFI 
@@ -384,11 +404,18 @@ Delta, which represents the slowing caused by distractor circles in CTT2 signifi
 
 # Saves word table of final model - NOTE: saves odds ratio not estimates
 # The coefficients are in this case automatically converted (exponentiated). 
-mytable(SOA_CTT1_CTTdelta_model_original, 'CTT1', 'CTT delta', 'CTT')
+mytable(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta', 'CTT')
 # Also save non transformed (log odds)
 #tab_model(SOA_CTT1_CTTdelta_model_original, file = paste(table_outpath, 'CTT-non-transformed.doc'), transform = NULL)
 # https://strengejacke.github.io/sjPlot/articles/plot_model_estimates.html
 #plot_model(SOA_CTT1_CTTdelta_model_original, dot.size = 1)
 # save a plot of the odds ratios
-ctt_oddsratio <-myplot(SOA_CTT1_CTTdelta_model_original, 'CTT1', 'CTT delta')
+ctt_oddsratio <-myplot(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta')
+saveplot('CTT', ctt_oddsratio)
+
+# Plot with reduced terms for clearer use in presentations
+ctt_oddsratio_selected <-myplot_reduced(SOA_CTT1_CTTdelta_model, "COGtrail1time_W3", "COGtraildeltatime_W3", 'CTT1', 'CTT delta')
+saveplot('CTT_selectedTerms', ctt_oddsratio_selected)
+
+
 saveplot('CTT', ctt_oddsratio)

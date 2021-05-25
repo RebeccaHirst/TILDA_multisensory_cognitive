@@ -10,7 +10,7 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "animal naming"
+this_cog_measure <- "immediate recall"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -74,7 +74,19 @@ myplot <- function(model, var1, var2){
                                  paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
                                  "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 1B2F\n", var1,'and', var2))
 }
-
+# myplot_reduced (to limit the terms plotted - for slide presentations)
+myplot_reduced <- function(model, var1, var2, var1_newname, var2_newname){
+  plot_model(model, terms = c("age_W3", "SOA [150]", "SOA [230]", "sex_W3 [Female]", "age_W3:SOA [150]", 
+                              "age_W3:SOA [230]", "SOA150:sex_W3Female", "SOA230:sex_W3Female", 
+                              paste("SOA230:", var1, sep = ''), 
+                              paste("SOA150:", var2, sep = ''), 
+                              paste("SOA230:", var2, sep = ''), 
+                              paste("SOA150:", var1, sep = ''), var1, var2),
+             axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1_newname, var2_newname, "Sex [Female]", "Age * SOA [150]",
+                                 "Age * SOA [230]", paste("SOA [150] * ", var1_newname), paste("SOA [230] * ", var1_newname),
+                                 paste("SOA [150] * ", var2_newname), paste("SOA [230] * ", var2_newname), "Sex [Female] * SOA [150]",
+                                 "Sex [Female] * SOA [230]"))) + ggtitle(paste("Predicting Accuracy in 1B2F\n",str_to_title(this_cog_measure), sep = ''))
+}
 # mytable
 mytable <- function(model, var1, var2, plotname){
   tab_model(model, file = paste(table_outpath, plotname, '.doc', sep = ''),
@@ -392,9 +404,13 @@ immediate recall X2(4) = 89.198, p < 2.2e-16 *** (baseline; AIC = 28608 BIC = 28
 if(this_cog_measure == "animal naming"){
   mytable(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [B]", this_cog_measure)
   oddsratio_plot <-myplot(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [B]")
+  oddsratio_plot_reduced <-myplot_reduced(SOA_interaction, "nC3A", "nC3B", "Trajectory Group [A]", "Trajectory Group [B]")
   }else{
-    mytable(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [C]", this_cog_measure)
-  oddsratio_plot <-myplot(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [C]")
+  mytable(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [C]", this_cog_measure)
+    oddsratio_plot <-myplot(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [C]")
+    oddsratio_plot_reduced <-myplot_reduced(SOA_interaction, "nC3A", "nC3C", "Trajectory Group [A]", "Trajectory Group [C]")
   }
   
 saveplot(this_cog_measure, oddsratio_plot)
+
+saveplot(paste(this_cog_measure, "_selectedTerms", sep = ''), oddsratio_plot_reduced)
