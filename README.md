@@ -12,7 +12,7 @@ The figures and tables from these analyses are also shown.
 Files
 -----------------
 
-The analysis scripts can be considered in 3 parts and are generally run in the following order. 
+The analysis scripts can be considered in 3 parts and are generally run in the following order. At the time of creating this repository the multisensory data were not yet in the public release of TILDA, though access can be requested (see data availability) - it is recommended that anyone running these scripts first contact the TILDA team and then run the analysis scripts below in the following order. 
 
 **Inclusion/Exclusion criteria [participant_selection]:**
 *	*select_cross_sectional.R* - apply exclusion criteria to cross-sectional (wave 3) TILDA dataset. 
@@ -37,3 +37,7 @@ References
 
 R CoreTeam. (2018). R: A Language and Environment for Statistical Computing. R Foundation for Statistical Computing. http://www.r-project.org/
 
+Contact
+-------------------
+
+hirstR@tcd.ie Rebecca Hirst
