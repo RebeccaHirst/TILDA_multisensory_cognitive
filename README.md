@@ -8,16 +8,16 @@ The figures and tables from these analyses are also shown.
 Files
 -----------------
 
-***Analysis scripts***
+The analysis scripts can be considered in 3 parts and are generally run in the following order. 
 
-*Inclusion/Exclusion criteria [participant_selection]*
+**Inclusion/Exclusion criteria [participant_selection]:**
 *	*select_cross_sectional.R* - apply exclusion criteria to cross-sectional (wave 3) TILDA dataset. 
 *	*select_longitudinal.R* - select participants who also have data available from wave 1 to 5 of TILDA and combine cognitive measures across TILDA waves.
 
-*Cross-sectional analysis [cross_sectional_analysis]*
+**Cross-sectional analysis [cross_sectional_analysis]:**
 *	*cognitive-mixed-models-CS.R* - run logistic mixed effects models to assess if cognitive measures are related to SIFI cross-sectionally at wave 3. 
 
-*Longitudinal analysis [longitudinal_analysis]*
+**Longitudinal analysis [longitudinal_analysis]:**
 *	*cognitive-kml.R* - use the KML package to make clusters for longitudinal cognitive trajectories.
 *	*cognitive-mixed-models-LD.R* - run logistic mixed effects models to predict SIFI from cognitive trajectories
 
