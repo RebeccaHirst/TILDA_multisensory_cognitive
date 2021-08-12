@@ -204,6 +204,35 @@ myChart<- flow_exclusions(
   percent_of_prev = TRUE
 )
 
+# Missing/na for immediate recall at W1 - W5 (i.e. field contains 'na')
+tilda_dataW3W1W2W4W5<-tilda_dataW3W1W2W4W5%>% 
+  drop_na(immediaterecall_total_W1, immediaterecall_total_W2, immediaterecall_total_W3, immediaterecall_total_W4, immediaterecall_total_W5)
+my_incl_counts_long<-c(my_incl_counts_long, nrow(tilda_dataW3W1W2W4W5))
+my_incl_labels_long<-c(my_incl_labels_long, 'has immediate recall at all waves')
+my_excl_labels_long<-c(my_excl_labels_long, 'missing immediate recall at a wave')
+
+# Missing/na for delayed recall at W1 - W5 (i.e. field contains 'na')
+tilda_dataW3W1W2W4W5<-tilda_dataW3W1W2W4W5%>% 
+  drop_na(COGdelayedrecall_W1, COGdelayedrecall_W2, COGdelayedrecall_W3, COGdelayedrecall_W4, COGdelayedrecall_W5)
+my_incl_counts_long<-c(my_incl_counts_long, nrow(tilda_dataW3W1W2W4W5))
+my_incl_labels_long<-c(my_incl_labels_long, 'has delayed recall at all waves')
+my_excl_labels_long<-c(my_excl_labels_long, 'missing delayed recall at a wave')
+
+# Missing/na for animal naming at W1 - W5 (i.e. field contains 'na')
+tilda_dataW3W1W2W4W5<-tilda_dataW3W1W2W4W5%>% 
+  drop_na(COGanimal_naming_W1,COGanimal_naming_W2, COGanimal_naming_W3, COGanimal_naming_W4, COGanimal_naming_W5)
+my_incl_counts_long<-c(my_incl_counts_long, nrow(tilda_dataW3W1W2W4W5))
+my_incl_labels_long<-c(my_incl_labels_long, 'has animal naming at all waves')
+my_excl_labels_long<-c(my_excl_labels_long, 'missing animal naming at a wave')
+
+# Plot exclusion criteria
+myChart<- flow_exclusions(
+  incl_counts = my_incl_counts_long,
+  total_label = "Available at wave 3 following exclusion criteria",
+  incl_labels = my_incl_labels_long,
+  excl_labels = my_excl_labels_long,
+  percent_of_prev = TRUE
+)
 #### Dataframes used only for k means script ####
 # These dataframes have only the columns used for longitudinal clustering
 

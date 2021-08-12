@@ -10,7 +10,7 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "immediate recall"
+this_cog_measure <- "animal naming"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -135,7 +135,14 @@ predictor_df<-tilda_dataW3W1W2W4W5%>%
          COGsartErrors3_W3, # SART commission errors at wave 3
          COGtrail2time_W3, # CTT2 time
          COGtrail1time_W3, # CTT1 time
-         COGtraildeltatime_W3) # CTT delta time
+         COGtraildeltatime_W3,# CTT delta time
+         COGanimal_naming_W1,# animal naming at wave 1 (for t-tests to describe trajectories)
+         COGanimal_naming_W5,# animal naming at wave 5 (for t-tests to describe trajectories)
+         COGdelayedrecall_W1,# delayed recall at wave 1 (for t-tests to describe trajectories)
+         COGdelayedrecall_W5,# delayed recall at wave 5 (for t-tests to describe trajectories)
+         immediaterecall_total_W1,# immediate recall at wave 1 (for t-tests to describe trajectories)
+         immediaterecall_total_W5# immediate recall at wave 1 (for t-tests to describe trajectories)
+         )
 
 # Merge cognitive groups with full dataframe
 
@@ -168,14 +175,61 @@ demographic_summary <-
        "Education" =
          list("Primary/none" = ~ qwraps2::n_perc0(.data$edu3_W3 == "Primary/none"),
               "Secondary"  = ~ qwraps2::n_perc0(.data$edu3_W3 == "Secondary"),
-              "Third/higher"  = ~ qwraps2::n_perc0(.data$edu3_W3 == "Third/higher")))
+              "Third/higher"  = ~ qwraps2::n_perc0(.data$edu3_W3 == "Third/higher")),
+       "Animal naming (W1)" =
+         list("min" = ~ min(.data$COGanimal_naming_W1),
+              "max" = ~ max(.data$COGanimal_naming_W1),
+              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGanimal_naming_W1)),
+       "Animal naming (W5)" =
+         list("min" = ~ min(.data$COGanimal_naming_W5),
+              "max" = ~ max(.data$COGanimal_naming_W5),
+              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGanimal_naming_W5)),
+       "Delayed recall (W1)" =
+         list("min" = ~ min(.data$COGdelayedrecall_W1),
+              "max" = ~ max(.data$COGdelayedrecall_W1),
+              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGdelayedrecall_W1)),
+       "Delayed recall (W5)" =
+         list("min" = ~ min(.data$COGdelayedrecall_W5),
+              "max" = ~ max(.data$COGdelayedrecall_W5),
+              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGdelayedrecall_W5)),
+       "Immediate recall (W1)" =
+         list("min" = ~ min(.data$immediaterecall_total_W1),
+              "max" = ~ max(.data$immediaterecall_total_W1),
+              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGdelayedrecall_W1)),
+       "Immediate recall (W5)" =
+         list("min" = ~ min(.data$immediaterecall_total_W5),
+              "max" = ~ max(.data$immediaterecall_total_W5),
+              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGdelayedrecall_W5))
+       )
 
 demo_table <- summary_table(dplyr::group_by(data, nC3), demographic_summary)
 View(demo_table)
 
+#### Test W1 vs W5 difference in each group for animal naming ####
+#perform for each group independantly (but wih corrected ps) so that we can describe each trajectory
+groupA<-analysis_df[(analysis_df$nC3=='A'),] 
+groupB<-analysis_df[(analysis_df$nC3=='B'),] 
+groupC<-analysis_df[(analysis_df$nC3=='C'),] 
+
+wilcox.test(groupA$COGanimal_naming_W1, groupA$COGanimal_naming_W5, paired = TRUE, alternative = "two.sided")#non parametric paired alternative
+wilcox.test(groupB$COGanimal_naming_W1, groupB$COGanimal_naming_W5, paired = TRUE, alternative = "two.sided")
+wilcox.test(groupC$COGanimal_naming_W1, groupC$COGanimal_naming_W5, paired = TRUE, alternative = "two.sided")
+' animal naming groups trajectories all ps < 2.2e-16 all declining, n = 2875'
+
+wilcox.test(groupA$COGdelayedrecall_W1, groupA$COGdelayedrecall_W5, paired = TRUE, alternative = "two.sided")#non parametric paired alternative
+wilcox.test(groupB$COGdelayedrecall_W1, groupB$COGdelayedrecall_W5, paired = TRUE, alternative = "two.sided")
+wilcox.test(groupC$COGdelayedrecall_W1, groupC$COGdelayedrecall_W5, paired = TRUE, alternative = "two.sided")
+' delayed recall; group A p = 0.02646 (probably wouldnt survive bonf correction - stable group?), 
+groupB p = 1.594e-05 (improvers?!), groupC p = p-value = 2.476e-14 (decreasers), n = 2875'
+
+wilcox.test(groupA$immediaterecall_total_W1, groupA$immediaterecall_total_W5, paired = TRUE, alternative = "two.sided")#non parametric paired alternative
+wilcox.test(groupB$immediaterecall_total_W1, groupB$immediaterecall_total_W5, paired = TRUE, alternative = "two.sided")
+wilcox.test(groupC$immediaterecall_total_W1, groupC$immediaterecall_total_W5, paired = TRUE, alternative = "two.sided")
+' immediate recall recall; group A p = 8.178e-08, groupB p = 9.896e-08 (increasers?!) groupC p = 4.051e-10 (decreasers), n = 2875'
+
 #### Test significant differences in age between groups ####
 
-# Compute the analysis of variance
+# Compute the analysis of variance to compare age between groups
 res.aov <- aov(age_W3 ~ nC3, data = analysis_df)
 # Summary of the analysis
 summary(res.aov)
@@ -207,14 +261,17 @@ Delayed Recall:
 	Kruskal-Wallis rank sum test
 
 data:  age_W3 by nC3
-Kruskal-Wallis chi-squared = 291.13, df = 2, p-value < 2.2e-16
+Kruskal-Wallis chi-squared = 276.89, df = 2, p-value < 2.2e-16
 
   Comparison          Z      P.unadj        P.adj
-1      A - B   8.271645 1.321231e-16 1.321231e-16
-2      A - C -10.281444 8.543753e-25 1.281563e-24
-3      B - C -17.046473 3.712732e-65 1.113820e-64
+1      A - B   8.079477 6.504510e-16 6.504510e-16
+2      A - C -10.007942 1.406474e-23 2.109711e-23
+3      B - C -16.622693 4.773904e-62 1.432171e-61
 
 Immediate recall
+
+Kruskal-Wallis chi-squared = 299.3, df = 2, p-value < 2.2e-16
+
 	Kruskal-Wallis rank sum test
 
 data:  age_W3 by nC3
@@ -223,9 +280,9 @@ Dunn (1964) Kruskal-Wallis multiple comparison
   p-values adjusted with the Benjamini-Hochberg method.
 
   Comparison          Z      P.unadj        P.adj
-1      A - B   9.110981 8.164075e-20 8.164075e-20
-2      A - C -10.472041 1.161117e-25 1.741676e-25
-3      B - C -17.581013 3.443658e-69 1.033097e-68
+1      A - B   8.944687 3.730048e-19 3.730048e-19
+2      A - C -10.240007 1.312274e-24 1.968411e-24
+3      B - C -17.246466 1.189564e-66 3.568692e-66
 
 Animal naming:
 	Kruskal-Wallis rank sum test
@@ -279,13 +336,13 @@ Delayed recall
 	Pearson's Chi-squared test
 
 data:  sextable_transposed
-X-squared = 128.81, df = 2, p-value < 2.2e-16
+X-squared = 132.12, df = 2, p-value < 2.2e-16
 
   Dimension     Value         A         B         C
-1         F Residuals -1.894657  9.835303 -9.168617
-2         F  p values  0.348827  0.000000  0.000000
-3         M Residuals  1.894657 -9.835303  9.168617
-4         M  p values  0.348827  0.000000  0.000000
+1         F Residuals -1.801729  9.897907 -9.362145
+2         F  p values  0.429528  0.000000  0.000000
+3         M Residuals  1.801729 -9.897907  9.362145
+4         M  p values  0.429528  0.000000  0.000000
 
 Immediate recall:
 > chisq.test(sextable_transposed) # sanity check against original result
@@ -293,14 +350,66 @@ Immediate recall:
 	Pearson's Chi-squared test
 
 data:  sextable_transposed
-X-squared = 121.96, df = 2, p-value < 2.2e-16
+X-squared = 125.3, df = 2, p-value < 2.2e-16
 
-  Dimension     Value         A         B        C
-1         F Residuals -2.351696  9.687398 -8.60265
-2         F  p values  0.112128  0.000000  0.00000
-3         M Residuals  2.351696 -9.687398  8.60265
-4         M  p values  0.112128  0.000000  0.00000
+  Dimension     Value         A         B         C
+1         F Residuals -2.105756  9.697398 -8.885137
+2         F  p values  0.211354  0.000000  0.000000
+3         M Residuals  2.105756 -9.697398  8.885137
+4         M  p values  0.211354  0.000000  0.000000
 "
+
+#### Spider plots of demographics between groups ####
+
+library(fmsb)
+analysis_df_spider <- analysis_df
+
+analysis_df_spider$age <- scale(analysis_df_spider$age_W3)
+analysis_df_spider$Visual_Acuity <- scale(analysis_df_spider$VAS_W3)
+analysis_df_spider$Verbal_Fluency_W1 <- scale(analysis_df_spider$COGanimal_naming_W1)
+analysis_df_spider$Verbal_Fluency_W5 <- scale(analysis_df_spider$COGanimal_naming_W5)
+analysis_df_spider$Delayed_Recall_W1 <- scale(analysis_df_spider$COGdelayedrecall_W1)
+analysis_df_spider$Delayed_Recall_W5 <- scale(analysis_df_spider$COGdelayedrecall_W5)
+analysis_df_spider$Imm_Recall_W1 <- scale(analysis_df_spider$immediaterecall_total_W1)
+analysis_df_spider$Imm_Recall_W5 <- scale(analysis_df_spider$immediaterecall_total_W5)
+analysis_df_spider$CRT_cog<- scale(analysis_df_spider$CRTmeancog_W3)
+analysis_df_spider$CRT_mot<- scale(analysis_df_spider$CRTmeanmot_W3)
+analysis_df_spider$SART_Ommissions<- scale(analysis_df_spider$COGsartOmmissions_W3)
+analysis_df_spider$SART_Comissions<- scale(analysis_df_spider$COGsartErrors3_W3)
+analysis_df_spider$CTT2 <- scale(analysis_df_spider$COGtrail2time_W3)
+analysis_df_spider$CTT1 <- scale(analysis_df_spider$COGtrail1time_W3)
+
+
+means_spider <- aggregate(analysis_df_spider, by = list(analysis_df_spider$nC3), FUN = mean, na.rm = TRUE)#means_spider2 <- subset(means_spider, select = c("age", "Visual_Acuity",  "Verbal_Fluency_W1", "Verbal_Fluency_W5", "Delayed_Recall_W1", "Delayed_Recall_W5",
+
+means_spider2 <- subset(means_spider, select = c("age", "Visual_Acuity",  "Verbal_Fluency_W1", "Verbal_Fluency_W5", "Delayed_Recall_W1", "Delayed_Recall_W5",
+                                                 "Imm_Recall_W1", "Imm_Recall_W5"))
+
+rownames(means_spider2) <- paste("Cluster" , letters[1:3] , sep="-")
+#means_spider2 <- means_spider2[,-1]
+
+data <- rbind(rep(2,6) , rep(-2,6) , means_spider2)
+
+#colnames(data) <- c("Age", "VAS", "TUG", "Verbal fluency", "Gait speed", "Grip strength")
+
+colors_border = c("#66CD00", "#009ACD", "#FF4500")
+colors_in = c("#66CD00", "#009ACD", "#FF4500")
+
+# plot with default options:
+radarchart( data  , axistype=1 , 
+            #custom polygon
+            pcol= scales::alpha(colors_border, 0.5), pfcol = scales::alpha(colors_in, 0.4), plwd=4 , plty=1,
+            #custom the grid
+            cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,20,5), cglwd=0.8,
+            #custom labels
+            vlcex=0.8 
+)
+
+# Add a legend
+legend(x=0.7, y=0.8, legend = rownames(data[-c(1,2),]), bty = "n", pch=20 , col=colors_in , text.col = "grey", cex=1, pt.cex = 3)
+
+
+
 #### Prep dataframe ####
 
 # Reshape to long format for mixed model
@@ -356,12 +465,13 @@ analysis_df_long_scaled$nTrials<-2
 # Re-level the cognitive group factor so that the most cognitively healthy group is the reference
 analysis_df_long_scaled$nC3_orig <- analysis_df_long$nC3 # keep the original variable for reference
 
-if(this_cog_measure == "animal naming"){
-  # For verbal fluency, animal_naming, group C is the healthiest, so is the reference
-  analysis_df_long_scaled$nC3 <- relevel(analysis_df_long_scaled$nC3, ref = "C")
-}else{# For immediate and delayed recall, groups B are the healthiest, so is the reference
-  analysis_df_long_scaled$nC3 <- relevel(analysis_df_long_scaled$nC3, ref = "B")
-}
+analysis_df_long_scaled$nC3 <- relevel(analysis_df_long_scaled$nC3, ref = "A")
+#if(this_cog_measure == "animal naming"){
+#  # For verbal fluency, animal_naming, group C is the healthiest, so is the reference
+#  analysis_df_long_scaled$nC3 <- relevel(analysis_df_long_scaled$nC3, ref = "C")
+#}else{# For immediate and delayed recall, groups B are the healthiest, so is the reference
+#  analysis_df_long_scaled$nC3 <- relevel(analysis_df_long_scaled$nC3, ref = "B")
+#}
 
 #### Fit mixed models ####
 
@@ -390,9 +500,9 @@ if(!plotting_only){
   '
 # Does the interaction with cognitive group remain significant after controlling fo the interaction with age and sex
 
-delayed recall X2(4) = 65.514 , p = 2.005e-13 ***  (baseline; AIC =28651  BIC = 28884; full; AIC = 28593 , BIC = 28858
-animal naming X2(4) = 85.559, p < 2.2e-16 *** (baseline; AIC = 28260 BIC =28493 ; full; AIC = 28182, BIC = 28446
-immediate recall X2(4) = 89.198, p < 2.2e-16 *** (baseline; AIC = 28608 BIC = 28841; full; AIC = 28527, BIC = 28791
+delayed recall X2(4) =62.448 , p = 8.867e-13 *** (baseline; AIC =28218   BIC = 28450; full; AIC = 28163  , BIC =28427 
+animal naming X2(4) = 87.9 , p < 2.2e-16 *** (baseline; AIC = 28202 BIC =28435 ; full; AIC = 28122, BIC = 28386
+immediate recall X2(4) = 92.736  , p < < 2.2e-16 ***(baseline; AIC =28177 BIC =28410; full; AIC = 28092 , BIC =  28356
 '
   # Likelihood ratio test comparing full model to model with key interaction term dropped
   # Running this 3 times for longitudinal models so interpret with corrected alpha of .016
@@ -400,17 +510,11 @@ immediate recall X2(4) = 89.198, p < 2.2e-16 *** (baseline; AIC = 28608 BIC = 28
   
 }
 
-# Plot and save figures and tables of model results
-if(this_cog_measure == "animal naming"){
-  mytable(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [B]", this_cog_measure)
-  oddsratio_plot <-myplot(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [B]")
-  oddsratio_plot_reduced <-myplot_reduced(SOA_interaction, "nC3A", "nC3B", "Trajectory Group [A]", "Trajectory Group [B]")
-  }else{
-  mytable(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [C]", this_cog_measure)
-    oddsratio_plot <-myplot(SOA_interaction, "Trajectory Group [A]", "Trajectory Group [C]")
-    oddsratio_plot_reduced <-myplot_reduced(SOA_interaction, "nC3A", "nC3C", "Trajectory Group [A]", "Trajectory Group [C]")
-  }
-  
+mytable(SOA_interaction, "Trajectory Group [B]", "Trajectory Group [C]", this_cog_measure)
+oddsratio_plot <-myplot(SOA_interaction, "Trajectory Group [B]", "Trajectory Group [C]")
+oddsratio_plot_reduced <-myplot_reduced(SOA_interaction, "nC3B", "nC3C", "Trajectory Group [B]", "Trajectory Group [C]")
+
+
 saveplot(this_cog_measure, oddsratio_plot)
 
 saveplot(paste(this_cog_measure, "_selectedTerms", sep = ''), oddsratio_plot_reduced)

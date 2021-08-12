@@ -56,7 +56,7 @@ saveplot <- function(var, plot){
 }
 # myplot
 myplot <- function(model, var1, var2){
-  plot_model(model, dot.size = 1,
+  plot_model(model, dot.size = 1,                                                                                                                                                             
              terms = c("age_w3", "SOA [150]", "SOA [230]", var1, var2),
              axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
                                  "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
@@ -227,12 +227,12 @@ if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
   
   # Likelihood ratio test: Adjusted baseline interaction model for CRT vs.  Adjusted full interaction model 
-  'X2(2)= 18.306 p  = 0.0001059 (Baseline; AIC = 28550, BIC = 28798; Full model; AIC = 28536, BIC = 28800)
+  'X2(2)= 21.42 p  = 2.232e-05 (Baseline; AIC = 28118, BIC = 28366; Full model; AIC = 28100 BIC =28364)
   CRT * SOA interaction  significant when also controlling for the age * SOA interaction and the sex * SOA interaction'
   anova(SOA_CRTmot_model, SOA_CRTcog_CRTmot_model)
   
   # Likelihood ratio test: Adjusted baseline interaction model for MRT vs.  Adjusted full interaction model  - 
-  'X2(2)= 75.641 p < 2.2e-16 *** (Baseline; AIC = 28607, BIC = 28856; Full model; AIC = 28536, BIC = 28800)
+  'X2(2)= 73.124 p < 2.2e-16 *** (Baseline; AIC = 28169, BIC = 28417; Full model; AIC = 28100, BIC = 28364
   MRT * SOA interaction still highly significant when also controlling for the age * SOA interaction '
   anova(SOA_CRTcog_model, SOA_CRTcog_CRTmot_model)
   
@@ -290,13 +290,12 @@ if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
   
   # Likelihood ratio test for commission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
-  'X2(2)= 9.0502 p  = 0.01083 * ( Baseline model; AIC = 28610, BIC= 28859; full model; AIC = 28605, BIC = 28870)
-  Errors of commission do significantly improve model fit whilst controlling for interaction with age
-  but not at the corrected alpha criterion level used to adjust for multiple comparisons'
+  'X2(2)= 10.26  p  = 0.005917 ** ( Baseline model; AIC = 28179, BIC= 28427; full model; AIC = 28173, BIC = 28436)
+  Errors of commission do significantly improve model fit whilst controlling for interaction with ag'
   anova(SOA_SARTom_model, SOA_SARTcom_SARTom_model)
   
   # Likelihood ratio test for omission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
-  'X2(2)= 22.461p  = 1.327e-05 *** (Baseline; AIC = 28624, BIC= 28872; full model; AIC = 28605, BIC = 28870)
+  'X2(2)= 18.097 p  =  0.0001176 *** (Baseline; AIC = 28187, BIC= 28435; full model; AIC = 28173, BIC =28436)
   Errors of omission significantly improve model fit whilst controlling for interaction with age'
   anova(SOA_SARTcom_model, SOA_SARTcom_SARTom_model)
   
@@ -379,12 +378,12 @@ SOA_CTT1_CTTdelta_model <-glmer(
 if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
   # Likelihood ratio test for CTTdelta * SOA whilst controlling for CTT1 * SOA: Adjusted CTTdelta SOA + Age *SOA model + Sex * SOA vs. Adjusted CTTdelta * SOA + Age *SOA + Sex * SOA
-  'X2(2) = 87.396  p  < 2.2e-16 ***(CTTdelta + SOA AIC = 28575, BIC = 28823 CTTdelta * SOA AIC = 28491, BIC = 28755)
+  'X2(2) = 84.859 p  < 2.2e-16 ***(CTTdelta + SOA AIC = 28140, BIC = 28388CTTdelta * SOA AIC =28059 , BIC = 28059 )
 CTT1, processing speed significantly improves model fit whilst controlling the delta * SOA term'
   anova(SOA_CTT1_model, SOA_CTT1_CTTdelta_model)
   
   # Likelihood ratio test for CTT1 * SOA whilst controlling for CTTdelta * SOA: Adjusted CTT1 SOA + Age *SOA model + Sex * SOA vs. Adjusted CTT1 * SOA + Age *SOA + Sex * SOA
-  'X2(2) = 74.02  p  = < 2.2e-16 ***(CTTdelta + SOA AIC = 28561, BIC = 28810 CTTdelta * SOA AIC = 28491, BIC = 28755)
+  'X2(2) = 75.792 p  = < 2.2e-16 ***(CTTdelta + SOA AIC = 28131, BIC = 28379 CTTdelta * SOA AIC = 28059, BIC = 28322)
 Delta, which represents the slowing caused by distractor circles in CTT2 significantly improves model fit whilst controlling the CTT1*SOA term'
   anova(SOA_CTTdelta_model, SOA_CTT1_CTTdelta_model)
   

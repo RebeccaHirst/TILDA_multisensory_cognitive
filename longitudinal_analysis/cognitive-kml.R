@@ -19,6 +19,7 @@ this_cog_measure <- "animal naming"
 
 # Import packages
 library(kml)
+library(jcolors)# for plotting custom trajectories
 
 # Functions
 # Automatically save plots to a directory named figures/tables in the current working directory
@@ -75,10 +76,10 @@ choice(clustObject)
 plotAllCriterion(clustObject) 
 
 # Plot the trajectories with the selected number of criterion. 
-plot(clustObject,2) 
-plot(clustObject,3)
-plot(clustObject,4) 
-plot(clustObject,5) 
+#plot(clustObject,2) 
+#plot(clustObject,3)
+#plot(clustObject,4) 
+#plot(clustObject,5) 
 
 
 # Save the image of the three cluster plot 
@@ -90,4 +91,82 @@ df_with_clusters <- data.frame(as.integer(clustObject@idAll), getClusters(clustO
 df_with_clusters <- data.frame(IDlist, getClusters(clustObject,2), getClusters(clustObject,3), getClusters(clustObject,4), getClusters(clustObject,5))
 # Make a data frame with the kmeans clusters
 colnames(df_with_clusters) <- c("tilda_serial", "nC2", "nC3", "nC4", "nC5")
+
+#### Relabel ####
+# So that the following applied to all groups for interpretation
+# A = healthiest
+# B = mid
+# C = least healthy 
+
+df_with_clusters$nC3_orig <- df_with_clusters$nC3
+if(this_cog_measure == "animal naming"){
+  df_with_clusters$nC3_new <- ifelse(df_with_clusters$nC3 == "A", 'B',
+                                     ifelse(df_with_clusters$nC3 == "B", 'C',
+                                            ifelse(df_with_clusters$nC3 == "C", 'A', NA)))
+  
+}else if (this_cog_measure == "delayed recall"){
+  df_with_clusters$nC3_new <- ifelse(df_with_clusters$nC3 == "A", 'B',
+                                     ifelse(df_with_clusters$nC3 == "B", 'A',
+                                            ifelse(df_with_clusters$nC3 == "C", 'C', NA)))
+}else if (this_cog_measure == "immediate recall"){
+  df_with_clusters$nC3_new <- ifelse(df_with_clusters$nC3 == "A", 'B',
+                                     ifelse(df_with_clusters$nC3 == "B", 'A',
+                                            ifelse(df_with_clusters$nC3 == "C", 'C', NA)))
+  }
+df_with_clusters$nC3 <- df_with_clusters$nC3_new
+#### Custom K means plot ####
+
+# Merge
+cluster_data<-merge(df_with_clusters, df, by='tilda_serial')
+
+if(this_cog_measure == "delayed recall"){
+  varying_labels = c("COGdelayedrecall_W1", "COGdelayedrecall_W2", "COGdelayedrecall_W3", "COGdelayedrecall_W4", "COGdelayedrecall_W5")
+  v_name = "delayed_recall"
+  plot_title = "Delayed recall clusters"
+  y_lab = "Words recalled (max 10)"
+  print('Grouping based on delayed recall')
+}else if(this_cog_measure == "animal naming"){
+  varying_labels = c("COGanimal_naming_W1", "COGanimal_naming_W2", "COGanimal_naming_W3", "COGanimal_naming_W4", "COGanimal_naming_W5")
+  v_name = "animal_naming"
+  plot_title = "Animal naming clusters"
+  y_lab = "Animals named (1 minute)"
+  print('Grouping based on animal naming')
+}else if(this_cog_measure == "immediate recall"){
+  varying_labels = c("immediaterecall_total_W1", "immediaterecall_total_W2", "immediaterecall_total_W3", "immediaterecall_total_W4", "immediaterecall_total_W5")
+  v_name = "immediate_recall"
+  plot_title = "Immediate recall clusters"
+  y_lab = "Words recalled (max 20)"
+  print('Grouping based on immediate recall')
+}
+
+cluster_data_long<- reshape(cluster_data, idvar="tilda_serial",
+                           varying = varying_labels,
+                           v.name=c(v_name),
+                           times=c("1", "2", "3", "4", "5"),
+                           direction="long")
+
+if(this_cog_measure == "delayed recall"){
+  plt_1 <- ggplot(cluster_data_long, aes(x = time, y = delayed_recall, group = tilda_serial, color = nC3)) + geom_line(alpha = 0.02, size = 0.5)
+}else if(this_cog_measure == "animal naming"){
+  plt_1 <- ggplot(cluster_data_long, aes(x = time, y = animal_naming, group = tilda_serial, color = nC3)) + geom_line(alpha = 0.02, size = 0.5)
+}else if(this_cog_measure == "immediate recall"){
+  plt_1 <- ggplot(cluster_data_long, aes(x = time, y = immediate_recall, group = tilda_serial, color = nC3)) + geom_line(alpha = 0.02, size = 0.5)
+}
+plt_1 <- plt_1 +
+  stat_summary(fun=mean, geom="line", aes(group=nC3),
+               size=2.25) +
+  facet_wrap(~ nC3) +
+  ggtitle(plot_title) +
+  labs(x = "TILDA wave", y = y_lab)+ theme_bw() +
+  theme(legend.position = "none") +
+  scale_color_manual(breaks = c("A", "B", "C"), 
+                    values=c("#24a99c", "#c6cf6e", "#d7263d")) + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        strip.background = element_blank(),
+        panel.background = element_blank()) +
+  theme(axis.text = element_text(size = 12), axis.title = element_text(size = 14, face = "bold"), strip.text = element_text(size = 14, face = "bold"), 
+        plot.title = element_text(size = 16, face = "bold"))
+
+saveplot(paste(this_cog_measure, '-kml-sep', sep = ''), plt_1)
 
