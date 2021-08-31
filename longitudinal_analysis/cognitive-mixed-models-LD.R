@@ -10,7 +10,7 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "animal naming"
+this_cog_measure <- "delayed recall"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -72,7 +72,7 @@ myplot <- function(model, var1, var2){
                                  "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
                                  "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                                  paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
-                                 "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 1B2F\n", var1,'and', var2))
+                                 "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 2B1F\n", var1,'and', var2))
 }
 # myplot_reduced (to limit the terms plotted - for slide presentations)
 myplot_reduced <- function(model, var1, var2, var1_newname, var2_newname){
@@ -85,7 +85,7 @@ myplot_reduced <- function(model, var1, var2, var1_newname, var2_newname){
              axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1_newname, var2_newname, "Sex [Female]", "Age * SOA [150]",
                                  "Age * SOA [230]", paste("SOA [150] * ", var1_newname), paste("SOA [230] * ", var1_newname),
                                  paste("SOA [150] * ", var2_newname), paste("SOA [230] * ", var2_newname), "Sex [Female] * SOA [150]",
-                                 "Sex [Female] * SOA [230]"))) + ggtitle(paste("Predicting Accuracy in 1B2F\n",str_to_title(this_cog_measure), sep = ''))
+                                 "Sex [Female] * SOA [230]"))) + ggtitle(paste("Predicting Accuracy in 2B1F\n",str_to_title(this_cog_measure), sep = ''))
 }
 # mytable
 mytable <- function(model, var1, var2, plotname){

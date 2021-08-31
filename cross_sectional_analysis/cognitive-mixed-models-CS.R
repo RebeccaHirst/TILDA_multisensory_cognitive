@@ -57,7 +57,6 @@ saveplot <- function(var, plot){
 # myplot
 myplot <- function(model, var1, var2){
   plot_model(model, dot.size = 1,                                                                                                                                                             
-             terms = c("age_w3", "SOA [150]", "SOA [230]", var1, var2),
              axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
                                  "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
                                  "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
@@ -65,7 +64,7 @@ myplot <- function(model, var1, var2){
                                  "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
                                  "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                                  paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
-                                 "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 1B2F\n", var1,'and', var2))
+                                 "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 2B1F\n", var1,'and', var2))
 }
 
 # myplot_reduced (to limit the terms plotted - for slide presentations)
@@ -79,7 +78,7 @@ myplot_reduced <- function(model, var1, var2, var1_newname, var2_newname){
            axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1_newname, var2_newname, "Sex [Female]", "Age * SOA [150]",
                                "Age * SOA [230]", paste("SOA [150] * ", var1_newname), paste("SOA [230] * ", var1_newname),
                                paste("SOA [150] * ", var2_newname), paste("SOA [230] * ", var2_newname), "Sex [Female] * SOA [150]",
-                               "Sex [Female] * SOA [230]"))) + ggtitle(paste("Predicting Accuracy in 1B2F\n", var1_newname,'and', var2_newname))
+                               "Sex [Female] * SOA [230]"))) + ggtitle(paste("Predicting Accuracy in 2B1F\n", var1_newname,'and', var2_newname))
 }
 # mytable
 mytable <- function(model, var1, var2, plotname){
@@ -229,11 +228,15 @@ if(!plotting_only){
   # Likelihood ratio test: Adjusted baseline interaction model for CRT vs.  Adjusted full interaction model 
   'X2(2)= 21.42 p  = 2.232e-05 (Baseline; AIC = 28118, BIC = 28366; Full model; AIC = 28100 BIC =28364)
   CRT * SOA interaction  significant when also controlling for the age * SOA interaction and the sex * SOA interaction'
+  'WITH FULL SAMPLE:
+  X2(2)= 10.609 p  = 0.004 '
   anova(SOA_CRTmot_model, SOA_CRTcog_CRTmot_model)
   
   # Likelihood ratio test: Adjusted baseline interaction model for MRT vs.  Adjusted full interaction model  - 
   'X2(2)= 73.124 p < 2.2e-16 *** (Baseline; AIC = 28169, BIC = 28417; Full model; AIC = 28100, BIC = 28364
   MRT * SOA interaction still highly significant when also controlling for the age * SOA interaction '
+  'WITH FULL SAMPLE:
+  X2(2)=105.99  p  < 2.2e-16 ***'
   anova(SOA_CRTcog_model, SOA_CRTcog_CRTmot_model)
   
   # Summarize the full best model
@@ -245,12 +248,12 @@ if(!plotting_only){
 # Dot whisker plot of full best model
 # The most complex model
 # The most complex model
-mytable(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]', 'CRT')
+mytable(SOA_CRTcog_CRTmot_model, 'CRT [Cog]', 'CRT [Mot]', 'CRT')
 
-crt_oddsratio <-myplot(SOA_CRTcog_CRTmot_model, 'CRT [Cognitive]', 'CRT [Motor]')
+crt_oddsratio <-myplot(SOA_CRTcog_CRTmot_model, 'CRT [Cog]', 'CRT [Mot]')
 saveplot('CRT', crt_oddsratio)
 
-crt_oddsratio_selected <-myplot_reduced(SOA_CRTcog_CRTmot_model, "CRTmeancog_W3", "CRTmeanmot_W3", 'CRT [Cognitive]', 'CRT [Motor]')
+crt_oddsratio_selected <-myplot_reduced(SOA_CRTcog_CRTmot_model, "CRTmeancog_W3", "CRTmeanmot_W3", 'CRT [Cog]', 'CRT [Mot]')
 saveplot('CRT_selectedTerms', crt_oddsratio_selected)
 
 #### 2. Cross-sectional analysis of Sustained Attention to Response Time (SART) task ####
@@ -291,12 +294,19 @@ if(!plotting_only){
   
   # Likelihood ratio test for commission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
   'X2(2)= 10.26  p  = 0.005917 ** ( Baseline model; AIC = 28179, BIC= 28427; full model; AIC = 28173, BIC = 28436)
-  Errors of commission do significantly improve model fit whilst controlling for interaction with ag'
+  Errors of commission do significantly improve model fit whilst controlling for interaction with ag
+  
+  FULL SAMPLE:
+  X2(2)= 14.677  p  = 0.0006502 ***
+  '
   anova(SOA_SARTom_model, SOA_SARTcom_SARTom_model)
   
   # Likelihood ratio test for omission * SOA: Adjusted commission + omission * SOA model + Age * SOA vs. Adjusted commissions * SOA + omissions * SOA + Age * SOA 
   'X2(2)= 18.097 p  =  0.0001176 *** (Baseline; AIC = 28187, BIC= 28435; full model; AIC = 28173, BIC =28436)
-  Errors of omission significantly improve model fit whilst controlling for interaction with age'
+  Errors of omission significantly improve model fit whilst controlling for interaction with age
+  
+  FULL SAMPLE:
+  X2(2)= 13.907 p  =  0.0009552 ***'
   anova(SOA_SARTcom_model, SOA_SARTcom_SARTom_model)
   
 }
@@ -304,13 +314,13 @@ if(!plotting_only){
 #### 2.3 Visualize results ####
 
 # The most complex model
-mytable(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions', 'SART')
+mytable(SOA_SARTcom_SARTom_model, 'SART om.', 'SART com.', 'SART')
 
-sart_oddsratio <-myplot(SOA_SARTcom_SARTom_model, 'SART ommissions', 'SART comissions')
+sart_oddsratio <-myplot(SOA_SARTcom_SARTom_model, 'SART om.', 'SART com.')
 saveplot('SART', sart_oddsratio)
 
 # Plot with reduced terms for clearer use in presentations
-sart_oddsratio_selected <-myplot_reduced(SOA_SARTcom_SARTom_model, "COGsartOmmissions_W3", "COGsartErrors3_W3", 'SART ommissions', 'SART comissions')
+sart_oddsratio_selected <-myplot_reduced(SOA_SARTcom_SARTom_model, "COGsartOmmissions_W3", "COGsartErrors3_W3", 'SART om.', 'SART com.')
 saveplot('SART_selectedTerms', sart_oddsratio_selected)
 
 #### 3. Cross-sectional analysis of Colour Trails Task (CTT) task ####
@@ -379,12 +389,19 @@ if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
   # Likelihood ratio test for CTTdelta * SOA whilst controlling for CTT1 * SOA: Adjusted CTTdelta SOA + Age *SOA model + Sex * SOA vs. Adjusted CTTdelta * SOA + Age *SOA + Sex * SOA
   'X2(2) = 84.859 p  < 2.2e-16 ***(CTTdelta + SOA AIC = 28140, BIC = 28388CTTdelta * SOA AIC =28059 , BIC = 28059 )
-CTT1, processing speed significantly improves model fit whilst controlling the delta * SOA term'
+CTT1, processing speed significantly improves model fit whilst controlling the delta * SOA term
+  
+  FULL SAMPLE: 
+  X2(2) = 87.852 p  < 2.2e-16 ***
+  '
   anova(SOA_CTT1_model, SOA_CTT1_CTTdelta_model)
   
   # Likelihood ratio test for CTT1 * SOA whilst controlling for CTTdelta * SOA: Adjusted CTT1 SOA + Age *SOA model + Sex * SOA vs. Adjusted CTT1 * SOA + Age *SOA + Sex * SOA
   'X2(2) = 75.792 p  = < 2.2e-16 ***(CTTdelta + SOA AIC = 28131, BIC = 28379 CTTdelta * SOA AIC = 28059, BIC = 28322)
-Delta, which represents the slowing caused by distractor circles in CTT2 significantly improves model fit whilst controlling the CTT1*SOA term'
+Delta, which represents the slowing caused by distractor circles in CTT2 significantly improves model fit whilst controlling the CTT1*SOA term
+  
+  FULL SAMPLE:
+  X2(2) = 118.71 p  = < 2.2e-16 ***'
   anova(SOA_CTTdelta_model, SOA_CTT1_CTTdelta_model)
   
 }
@@ -403,18 +420,18 @@ Delta, which represents the slowing caused by distractor circles in CTT2 signifi
 
 # Saves word table of final model - NOTE: saves odds ratio not estimates
 # The coefficients are in this case automatically converted (exponentiated). 
-mytable(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta', 'CTT')
+mytable(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta', 'CTT_fullsamp')
 # Also save non transformed (log odds)
 #tab_model(SOA_CTT1_CTTdelta_model_original, file = paste(table_outpath, 'CTT-non-transformed.doc'), transform = NULL)
 # https://strengejacke.github.io/sjPlot/articles/plot_model_estimates.html
 #plot_model(SOA_CTT1_CTTdelta_model_original, dot.size = 1)
 # save a plot of the odds ratios
 ctt_oddsratio <-myplot(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta')
-saveplot('CTT', ctt_oddsratio)
+saveplot('CTT_fullsamp', ctt_oddsratio)
 
 # Plot with reduced terms for clearer use in presentations
 ctt_oddsratio_selected <-myplot_reduced(SOA_CTT1_CTTdelta_model, "COGtrail1time_W3", "COGtraildeltatime_W3", 'CTT1', 'CTT delta')
-saveplot('CTT_selectedTerms', ctt_oddsratio_selected)
+saveplot('CTT_selectedTerms_fullsamp', ctt_oddsratio_selected)
 
 
 saveplot('CTT', ctt_oddsratio)
