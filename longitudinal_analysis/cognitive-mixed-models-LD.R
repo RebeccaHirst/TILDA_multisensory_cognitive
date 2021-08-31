@@ -10,7 +10,7 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "delayed recall"
+this_cog_measure <- "immediate recall"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -54,9 +54,9 @@ saveplot <- function(var, plot){
     device = NULL,
     path = NULL,
     scale = 1,
-    width = NA,
-    height = NA,
-    units = c("in", "cm", "mm"),
+    width = 10,
+    height = 10,
+    units = c("in"),
     dpi = 300,
     limitsize = TRUE,
   )
