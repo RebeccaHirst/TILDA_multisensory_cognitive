@@ -15,7 +15,7 @@ Benefits of kml over standard algorithms:
 
 "
 # Type the measure you want to run k means on ('animal naming', 'delayed recall' or 'immediate recall')
-this_cog_measure <- "delayed recall"
+this_cog_measure <- "animal naming"
 
 # Import packages
 library(kml)
@@ -34,8 +34,8 @@ saveplot <- function(var, plot){
     device = NULL,
     path = NULL,
     scale = 1,
-    width = 10,
-    height = 10,
+    width = 5,
+    height = 6,
     units = c("in"),
     dpi = 300,
     limitsize = TRUE,

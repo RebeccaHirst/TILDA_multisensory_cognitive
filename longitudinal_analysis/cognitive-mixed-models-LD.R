@@ -10,7 +10,7 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "immediate recall"
+this_cog_measure <- "animal naming"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -47,6 +47,8 @@ path_breaks <- which(strsplit(current_directory, "")[[1]]=="/")
 plot_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'figures/', sep = '')
 table_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'tables/', sep = '')
 
+#saved dimensions are 5 x 6 for selected model terms and 6 x 10 for full model terms
+
 saveplot <- function(var, plot){
   ggsave(
     paste(plot_outpath, var,  '.pdf', sep = ''),
@@ -54,7 +56,7 @@ saveplot <- function(var, plot){
     device = NULL,
     path = NULL,
     scale = 1,
-    width = 10,
+    width = 6,
     height = 10,
     units = c("in"),
     dpi = 300,

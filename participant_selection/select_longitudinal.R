@@ -62,7 +62,6 @@ wave2 <- read.dta("/Volumes/releases/Wave 2/tildav2-5-0.dta")
 wave4 <- read.dta("/Volumes/releases/Wave 4/Datasets/tildav4-6-0.dta")
 wave5 <- read.dta13("/Volumes/releases/Wave 5/Datasets/tildav5-6-1.dta")
 
-
 # Retain original dataframes for reference
 wave1_orig<-wave1
 wave2_orig<-wave2
