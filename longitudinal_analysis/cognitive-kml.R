@@ -25,7 +25,7 @@ library(jcolors)# for plotting custom trajectories
 # Automatically save plots to a directory named figures/tables in the current working directory
 current_directory <- dirname(rstudioapi::getSourceEditorContext()$path)
 path_breaks <- which(strsplit(current_directory, "")[[1]]=="/")
-plot_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'figures/', sep = '')
+plot_outpath<- paste(substr(current_directory, start = 1, stop = path_breaks[length(path_breaks)]),'figures/kml_plots/', sep = '')
 
 saveplot <- function(var, plot){
   ggsave(

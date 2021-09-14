@@ -412,7 +412,7 @@ Delta, which represents the slowing caused by distractor circles in CTT2 signifi
 # Note: sd_(Intercept).tilda_serial indicates the standard deviation of the random effect, which shows us how likely 
 # an individual is to deviate from the standard intercept.
 # "The idea of a random intercept and a random slope indicate that any given subject
-# will “wiggle” a bit around this mean regression line both up or down (random
+# will wiggle a bit around this mean regression line both up or down (random
 # intercept) and clockwise or counterclockwise (random slope). The variances (and
 # therefore standard deviations) of the random effects determine the sizes of typical
 # deviations from the mean intercept and slope" https://www.stat.cmu.edu/~hseltman/309/Book/chapter15.pdf
@@ -427,11 +427,11 @@ mytable(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta', 'CTT_fullsamp')
 #plot_model(SOA_CTT1_CTTdelta_model_original, dot.size = 1)
 # save a plot of the odds ratios
 ctt_oddsratio <-myplot(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta')
-saveplot('CTT_fullsamp', ctt_oddsratio)
+saveplot('CTT', ctt_oddsratio)
 
 # Plot with reduced terms for clearer use in presentations
 ctt_oddsratio_selected <-myplot_reduced(SOA_CTT1_CTTdelta_model, "COGtrail1time_W3", "COGtraildeltatime_W3", 'CTT1', 'CTT delta')
-saveplot('CTT_selectedTerms_fullsamp', ctt_oddsratio_selected)
+saveplot('CTT_selectedTerms', ctt_oddsratio_selected)
 
 
 saveplot('CTT', ctt_oddsratio)
