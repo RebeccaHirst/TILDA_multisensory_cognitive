@@ -15,7 +15,7 @@ Benefits of kml over standard algorithms:
 
 "
 # Type the measure you want to run k means on ('animal naming', 'delayed recall' or 'immediate recall')
-this_cog_measure <- "immediate recall"
+this_cog_measure <- "animal naming"
 
 # Import packages
 library(kml)

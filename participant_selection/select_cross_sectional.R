@@ -19,7 +19,7 @@ Last Edited: 04/05/2021
 "
 # clear workspace variables
 
-#rm(list = ls())
+rm(list = ls())
 
 # Do you want to store plots of the cognitive variables? If so where (note if TRUE plots take a while to generate)
 store_cog_plots <- FALSE
@@ -49,6 +49,40 @@ capi <- read.dta("/Volumes/releases/Wave 3/CAPI/tildav3-5-0.dta")
 # Healthcare assessment (ha) - WAVE 3
 ha <- read.dta("/Volumes/releases/Wave 3/tilda-HAC-v3.2.2.dta")
 
+# Generate composite measures of health
+
+#Chronic conditions composite measure
+# recode character vars as binary 1 or 0 
+capi$CHRparkinsons <- +(capi$CHRparkinsons == "Yes")
+capi$CHRlungdisease <- +(capi$CHRlungdisease == "Yes")
+capi$CHRasthma <- +(capi$CHRasthma == "Yes")
+capi$CHRarthritis<- +(capi$CHRarthritis== "Yes")
+capi$CHRcancer<- +(capi$CHRcancer== "Yes")
+capi$CHRosteoporosis<- +(capi$CHRosteoporosis== "Diagnosed")
+capi$CHR3<-apply(capi[,c("CHRlungdisease","CHRasthma","CHRarthritis","CHRosteoporosis","CHRcancer","CHRparkinsons")],1,sum)
+capi$CHR3[which(capi$CHR3>2)]<-2
+capi$CHR3<-as.factor(capi$CHR3)
+table(capi$CHR3) 
+
+# cardiovascular composite measure
+capi$CVDtia<- +(capi$CVDtia== "Yes")
+capi$CVDstroke<- +(capi$CVDstroke== "Yes")
+capi$CVDheartattack<- +(capi$CVDheartattack== "Yes")
+capi$CVDheartmurmur<- +(capi$CVDheartmurmur== "Yes")
+capi$CVDheartrhythm<- +(capi$CVDheartrhythm== "Yes")
+capi$CVDangina<- +(capi$CVDangina== "Yes")
+capi$CVDstroketia<-ifelse(capi$CVDstroke==1 | capi$CVDtia==1,1,0)
+capi$CVD4<-apply(capi[,c("CVDangina", "CVDheartattack","CVDstroketia","CVDheartmurmur","CVDheartrhythm")],1,sum)
+capi$CVD4[which(capi$CVD4>2)]<-2
+capi$CVD4<-as.factor(capi$CVD4)
+table(capi$CVD4)
+
+#Depression cut off
+capi$DEPRESSED<-ifelse(capi$MHcesd_capi_sf>=9,1,0)
+capi$DEPRESSED[which(is.na(capi$MHcesd_capi_sf))]<-NA
+capi$DEPRESSED<-factor(capi$DEPRESSED)
+summary(capi$DEPRESSED)
+
 # Merge the capi (Computer assisted personal interview) and ha dataframes
 tilda_data <-merge(capi, ha, by="tilda_serial")
 
@@ -70,7 +104,8 @@ tilda_data<-tilda_data_orig%>%
          ph114, ph142, COGprosmem1, COGprosmem2, ph107_01, ph107_02, ph107_03,
          Shams_2B0F_70, Shams_2B0F_150, Shams_2B0F_230, Shams_0B2F,
          Shams_1B1F, Shams_2B1F_70, Shams_2B1F_150, Shams_2B1F_230,
-         Shams_2B1F_m70, Shams_2B1F_m150, Shams_2B1F_m230, COGnartRawScore)
+         Shams_2B1F_m70, Shams_2B1F_m150, Shams_2B1F_m230, COGnartRawScore, CHR3, CVD4, DEPRESSED, bmi)
+
 
 #### Handy functions ####
 # See corresponding function tests in 'function_tests'

@@ -10,7 +10,7 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "immediate recall"
+this_cog_measure <- "animal naming"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -71,7 +71,8 @@ myplot <- function(model, var1, var2){
                                  "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
                                  "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
                                  "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
-                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
+                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]","Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
+                                 "Cardio conds [2]","Depression [1]", "Age * SOA [150]",
                                  "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                                  paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
                                  "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 2B1F\n", var1,'and', var2))
@@ -96,7 +97,8 @@ mytable <- function(model, var1, var2, plotname){
                             "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
                             "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
                             "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
-                            "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
+                            "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
+                            "Cardio conds [2]","Depression [1]", "Age * SOA [150]",
                             "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                             paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
                             "Sex [Female] * SOA [230]"))
@@ -143,7 +145,10 @@ predictor_df<-tilda_dataW3W1W2W4W5%>%
          COGdelayedrecall_W1,# delayed recall at wave 1 (for t-tests to describe trajectories)
          COGdelayedrecall_W5,# delayed recall at wave 5 (for t-tests to describe trajectories)
          immediaterecall_total_W1,# immediate recall at wave 1 (for t-tests to describe trajectories)
-         immediaterecall_total_W5# immediate recall at wave 1 (for t-tests to describe trajectories)
+         immediaterecall_total_W5,# immediate recall at wave 1 (for t-tests to describe trajectories)
+         CHR3_W3, # number of chronic conditions
+         CVD4_W3, # number of cardiovascular conditions
+         DEPRESSED_W3, # depression 
          )
 
 # Merge cognitive groups with full dataframe
@@ -483,7 +488,7 @@ if(!plotting_only){
   # Adjusted baseline model: nC3 + SOA + age *SOA + sex * SOA
   SOA_additive <-glmer(
     Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + (1|tilda_serial), 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3 + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
@@ -493,7 +498,7 @@ if(!plotting_only){
 # Adjusted full interaction model: nC3 * SOA + age *SOA + sex * SOA
 SOA_interaction <-glmer(
   Accuracy ~  age_W3*SOA + nC3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
+    Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
