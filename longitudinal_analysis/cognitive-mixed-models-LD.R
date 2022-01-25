@@ -10,7 +10,7 @@ delayed_recall_groups, animal_naming_groups and immediate_recall_groups respecti
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "animal naming"
+this_cog_measure <- "delayed recall"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -149,6 +149,8 @@ predictor_df<-tilda_dataW3W1W2W4W5%>%
          CHR3_W3, # number of chronic conditions
          CVD4_W3, # number of cardiovascular conditions
          DEPRESSED_W3, # depression 
+         COGmoca_W3, # wave 3 moca
+         COGmoca_W1 #wave 1 moca
          )
 
 # Merge cognitive groups with full dataframe
@@ -169,6 +171,8 @@ View(analysis_df)
 # Show demographics of each cognitive trajectory group 
 
 table(analysis_df$age_W3, analysis_df$nC3)
+table(analysis_df$COGmoca_W3, analysis_df$nC3)
+
 options(qwraps2_markup = "markdown")
 data <- analysis_df
 demographic_summary <-
@@ -206,13 +210,22 @@ demographic_summary <-
        "Immediate recall (W5)" =
          list("min" = ~ min(.data$immediaterecall_total_W5),
               "max" = ~ max(.data$immediaterecall_total_W5),
-              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGdelayedrecall_W5))
+              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGdelayedrecall_W5)),
+       "Moca (W3)" =
+         list("min" = ~ min(.data$COGmoca_W3),
+              "max" = ~ max(.data$COGmoca_W3),
+              "mean (sd)" = ~ qwraps2::mean_sd(.data$COGmoca_W3))
        )
 
 demo_table <- summary_table(dplyr::group_by(data, nC3), demographic_summary)
 View(demo_table)
 
+#demographics of the whole cohort 
+demo_table2 <- summary_table(data, demographic_summary)
+View(demo_table2)
+
 write.table(demo_table, paste(table_outpath, this_cog_measure, "_groups", sep=""), sep=",", quote=FALSE, row.names=F)
+write.table(demo_table2, paste(table_outpath, "overall", sep=""), sep=",", quote=FALSE, row.names=F)
 
 #### Test W1 vs W5 difference in each group for animal naming ####
 #perform for each group independantly (but wih corrected ps) so that we can describe each trajectory
