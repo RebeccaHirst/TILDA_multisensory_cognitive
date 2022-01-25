@@ -72,7 +72,7 @@ myplot <- function(model, var1, var2){
                                  "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
                                  "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
                                  "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]","Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
-                                 "Cardio conds [2]","Depression [1]", "Age * SOA [150]",
+                                 "Cardio conds [2]", "Age * SOA [150]",
                                  "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                                  paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
                                  "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 2B1F\n", var1,'and', var2))
@@ -98,7 +98,7 @@ mytable <- function(model, var1, var2, plotname){
                             "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
                             "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
                             "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
-                            "Cardio conds [2]","Depression [1]", "Age * SOA [150]",
+                            "Cardio conds [2]", "Age * SOA [150]",
                             "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                             paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
                             "Sex [Female] * SOA [230]"))
@@ -503,7 +503,7 @@ if(!plotting_only){
   # Adjusted baseline model: nC3 + SOA + age *SOA + sex * SOA
   SOA_additive <-glmer(
     Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3 + (1|tilda_serial), 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
@@ -513,7 +513,7 @@ if(!plotting_only){
 # Adjusted full interaction model: nC3 * SOA + age *SOA + sex * SOA
 SOA_interaction <-glmer(
   Accuracy ~  age_W3*SOA + nC3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3 + (1|tilda_serial), 
+    Shams_0B2F_W3 + CHR3_W3 + CVD4_W3  + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
@@ -522,7 +522,7 @@ if(!plotting_only){
   '
 # Does the interaction with cognitive group remain significant after controlling fo the interaction with age and sex
 
-delayed recall X2(4) =62.448 , p = 8.867e-13 *** (baseline; AIC =28218   BIC = 28450; full; AIC = 28163  , BIC =28427 
+delayed recall X2(4) =62.584 , p =  8.3e-13 ***(baseline; AIC =28212  BIC = 28476; full; AIC = 28158 , BIC =28452
 animal naming X2(4) = 90.231 , p < 2.2e-16  *** (baseline; AIC = 28124 BIC =28396 ; full; AIC = 28042 , BIC = 28345
 immediate recall X2(4) = 90.223   , p < 2.2e-16 *** ***(baseline; AIC =28098  BIC =28370 full; AIC = 28016 , BIC =  28319
 '
