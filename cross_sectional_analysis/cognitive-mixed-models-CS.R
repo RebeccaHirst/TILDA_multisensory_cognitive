@@ -61,7 +61,8 @@ myplot <- function(model, var1, var2){
                                  "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
                                  "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
                                  "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
-                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
+                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]","Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
+                                 "Cardio conds [2]","Depression [1]", "Age * SOA [150]",
                                  "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                                  paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
                                  "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 2B1F\n", var1,'and', var2))
@@ -87,7 +88,8 @@ mytable <- function(model, var1, var2, plotname){
                                  "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
                                  "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
                                  "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
-                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Age * SOA [150]",
+                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]","Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
+                             "Cardio conds [2]","Depression [1]", "Age * SOA [150]",
                                  "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                                  paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
                                  "Sex [Female] * SOA [230]"))
@@ -121,7 +123,11 @@ analysis_df<-tilda_dataW3W1W2W4W5%>%
          COGsartErrors3_W3, # SART commission errors at wave 3
          COGtrail2time_W3, # CTT2 time
          COGtrail1time_W3, # CTT1 time
-         COGtraildeltatime_W3) # CTT delta time
+         COGtraildeltatime_W3,# CTT delta time
+         CHR3_W3, # number of chronic conditions
+         CVD4_W3, # number of cardiovascular conditions
+         DEPRESSED_W3, # depression 
+         )
 
 # Make a ratio score of CTT1 and CTT2 # score > 1 indicates slower in CTT2 relative to CTT1
 analysis_df$COGtrailratiotime_W3 <- analysis_df$COGtrail2time_W3/analysis_df$COGtrail1time_W3
@@ -193,6 +199,8 @@ analysis_df_long_scaled$nTrials<-2
 
 #### 1.1 Fit mixed models ####
 # Fully adjusted models
+# Note: failed to converge with + CHR3_W3 + CVD4_W3 + DEPRESSED_W3
+# so ran with only CHR3_W3 + CVD4_W3 CONVERGED
 
 if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
@@ -200,14 +208,14 @@ if(!plotting_only){
   # Adjusted baseline interaction model for CRT: MRT * SOA + CRT + SOA + age *SOA + sex * SOA
   SOA_CRTmot_model <-glmer(
     Accuracy ~  age_W3 * SOA + CRTmeancog_W3 + CRTmeanmot_W3 * SOA + sex_W3 * SOA+ edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + (1|tilda_serial), 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
   # Adjusted baseline interaction model for MRT: MRT + SOA + CRT * SOA + age *SOA + sex * SOA
   SOA_CRTcog_model <-glmer(
     Accuracy ~  age_W3 * SOA + CRTmeancog_W3 * SOA + CRTmeanmot_W3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + (1|tilda_serial), 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
@@ -216,7 +224,7 @@ if(!plotting_only){
 # Adjusted full interaction model: MRT * SOA + CRT * SOA + age *SOA + sex * SOA Note: can take a long time to converge
 SOA_CRTcog_CRTmot_model <-glmer(
   Accuracy ~  age_W3 * SOA + CRTmeancog_W3 * SOA + CRTmeanmot_W3 * SOA + sex_W3 * SOA+ edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
+    Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
@@ -229,14 +237,22 @@ if(!plotting_only){
   'X2(2)= 21.42 p  = 2.232e-05 (Baseline; AIC = 28118, BIC = 28366; Full model; AIC = 28100 BIC =28364)
   CRT * SOA interaction  significant when also controlling for the age * SOA interaction and the sex * SOA interaction'
   'WITH FULL SAMPLE:
-  X2(2)= 10.609 p  = 0.004 '
+  X2(2)= 10.609 p  = 0.004 
+  
+  with chronic conds:
+  X2(2)= 21.50 p  = 2.143e-05 *** (Baseline; AIC = 28112, BIC = 28391; Full model; AIC = 28095 BIC =28389)
+  '
   anova(SOA_CRTmot_model, SOA_CRTcog_CRTmot_model)
   
   # Likelihood ratio test: Adjusted baseline interaction model for MRT vs.  Adjusted full interaction model  - 
   'X2(2)= 73.124 p < 2.2e-16 *** (Baseline; AIC = 28169, BIC = 28417; Full model; AIC = 28100, BIC = 28364
   MRT * SOA interaction still highly significant when also controlling for the age * SOA interaction '
   'WITH FULL SAMPLE:
-  X2(2)=105.99  p  < 2.2e-16 ***'
+  X2(2)=105.99  p  < 2.2e-16 ***
+  
+  which chronic conds:
+  X2(2)= 73.096 p < 2.2e-16 *** (Baseline; AIC = 28164, BIC = 28443; Full model; AIC = 28095, BIC = 28389
+  '
   anova(SOA_CRTcog_model, SOA_CRTcog_CRTmot_model)
   
   # Summarize the full best model
@@ -251,16 +267,18 @@ if(!plotting_only){
 mytable(SOA_CRTcog_CRTmot_model, 'CRT [Cog]', 'CRT [Mot]', 'CRT')
 
 crt_oddsratio <-myplot(SOA_CRTcog_CRTmot_model, 'CRT [Cog]', 'CRT [Mot]')
-saveplot('CRT', crt_oddsratio)
+saveplot('CRT_chr', crt_oddsratio)
 
 crt_oddsratio_selected <-myplot_reduced(SOA_CRTcog_CRTmot_model, "CRTmeancog_W3", "CRTmeanmot_W3", 'CRT [Cog]', 'CRT [Mot]')
-saveplot('CRT_selectedTerms', crt_oddsratio_selected)
+saveplot('CRT_selectedTerms_chr', crt_oddsratio_selected)
 
 #### 2. Cross-sectional analysis of Sustained Attention to Response Time (SART) task ####
 # These models explore the error and omission elements of the SART in relation to SIFI 
 
 #### 2.1 Fit mixed models ####
 # Fully Adjusted Models
+# Did converge with + CHR3_W3 + CVD4_W3 + DEPRESSED_W3
+# for consistency with CRT ran without depression
 
 if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
@@ -268,14 +286,14 @@ if(!plotting_only){
   # Adjusted baseline interaction model for omissions: omissions + SOA + commissions * SOA + Age * SOA + sex *SOAA
   SOA_SARTcom_model <-glmer(
     Accuracy ~  age_W3 * SOA + COGsartOmmissions_W3 + COGsartErrors3_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + (1|tilda_serial), 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3 + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
   # Adjusted baseline interaction model for commissions: commissions + SOA + omissions * SOA + Age * SOA + sex * SOA
   SOA_SARTom_model <-glmer(
     Accuracy ~  age_W3 * SOA + COGsartOmmissions_W3 * SOA + COGsartErrors3_W3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + (1|tilda_serial), 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3+ (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
@@ -284,7 +302,7 @@ if(!plotting_only){
 # Adjusted full interaction model: commissions * SOA + omissions * SOA + Age * SOA + sex * SOA
 SOA_SARTcom_SARTom_model <-glmer(
   Accuracy ~  age_W3 * SOA + COGsartOmmissions_W3 * SOA + COGsartErrors3_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
+    Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
@@ -298,6 +316,10 @@ if(!plotting_only){
   
   FULL SAMPLE:
   X2(2)= 14.677  p  = 0.0006502 ***
+  
+  With CHR3_W3 + CVD4_W3  (longitudinal sample)
+  X2(2)= 9.86  p  = 0.006121 ** ( Baseline model; AIC = 28173, BIC= 28452; full model; AIC = 28167, BIC = 28461)
+  
   '
   anova(SOA_SARTom_model, SOA_SARTcom_SARTom_model)
   
@@ -306,7 +328,11 @@ if(!plotting_only){
   Errors of omission significantly improve model fit whilst controlling for interaction with age
   
   FULL SAMPLE:
-  X2(2)= 13.907 p  =  0.0009552 ***'
+  X2(2)= 13.907 p  =  0.0009552 ***
+  
+  With CHR3_W3 + CVD4_W3 + DEPRESSED_W3 (longitudinal sample)
+  X2(2)= 18.475 p  =  9.73e-05 *** (Baseline; AIC = 28181, BIC= 28460; full model; AIC = 28167, BIC =28461)
+  '
   anova(SOA_SARTcom_model, SOA_SARTcom_SARTom_model)
   
 }
@@ -317,11 +343,11 @@ if(!plotting_only){
 mytable(SOA_SARTcom_SARTom_model, 'SART om.', 'SART com.', 'SART')
 
 sart_oddsratio <-myplot(SOA_SARTcom_SARTom_model, 'SART om.', 'SART com.')
-saveplot('SART', sart_oddsratio)
+saveplot('SART_chr', sart_oddsratio)
 
 # Plot with reduced terms for clearer use in presentations
 sart_oddsratio_selected <-myplot_reduced(SOA_SARTcom_SARTom_model, "COGsartOmmissions_W3", "COGsartErrors3_W3", 'SART om.', 'SART com.')
-saveplot('SART_selectedTerms', sart_oddsratio_selected)
+saveplot('SART_selectedTerms_chr', sart_oddsratio_selected)
 
 #### 3. Cross-sectional analysis of Colour Trails Task (CTT) task ####
 # In this model we will explore the effect of various measures of the Color Trails Test (CTT) in relation to SIFI 
@@ -329,6 +355,8 @@ saveplot('SART_selectedTerms', sart_oddsratio_selected)
 
 #### 3.1 Fit mixed models ####
 # Fully Adjusted Models
+# Did converge with + CHR3_W3 + CVD4_W3 + DEPRESSED_W3
+# ran without depression for consistenct with CRT 
 
 ' Initially fitted models in same way as other models, but noted models failed to converge: See below
 
@@ -363,14 +391,14 @@ if(!plotting_only){
   # Baseline CTT1 whilst controlling for delta interaction model 
   SOA_CTT1_model <-glmer(
     Accuracy ~  age_W3 * SOA + COGtrail1time_W3 + COGtraildeltatime_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + (1|tilda_serial), 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3+ DEPRESSED_W3  + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
   # Baseline CTT delta whilst controlling for CTT interaction model 
   SOA_CTTdelta_model <-glmer(
     Accuracy ~  age_W3 * SOA + COGtrail1time_W3*SOA + COGtraildeltatime_W3 + SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + (1|tilda_serial), 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3+ DEPRESSED_W3  + (1|tilda_serial), 
     data = analysis_df_long_scaled, 
     family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
   
@@ -379,7 +407,7 @@ if(!plotting_only){
 # Full CTT1*SOA and delta * SOA interaction model 
 SOA_CTT1_CTTdelta_model <-glmer(
   Accuracy ~  age_W3 * SOA + COGtrail1time_W3*SOA + COGtraildeltatime_W3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + (1|tilda_serial), 
+    Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3 + (1|tilda_serial), 
   data = analysis_df_long_scaled, 
   family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
@@ -393,6 +421,9 @@ CTT1, processing speed significantly improves model fit whilst controlling the d
   
   FULL SAMPLE: 
   X2(2) = 87.852 p  < 2.2e-16 ***
+  
+  with chronic conditions:
+  X2(2) = 85.381  p  < 2.2e-16 ***(CTTdelta + SOA AIC = 28061, BIC = 28348; CTTdelta * SOA AIC = 27980 , BIC = 28282 )
   '
   anova(SOA_CTT1_model, SOA_CTT1_CTTdelta_model)
   
@@ -401,7 +432,11 @@ CTT1, processing speed significantly improves model fit whilst controlling the d
 Delta, which represents the slowing caused by distractor circles in CTT2 significantly improves model fit whilst controlling the CTT1*SOA term
   
   FULL SAMPLE:
-  X2(2) = 118.71 p  = < 2.2e-16 ***'
+  X2(2) = 118.71 p  = < 2.2e-16 ***
+  
+  with chronic conditions:
+  X2(2) = 75.14 p  < 2.2e-16 ***(CTTdelta + SOA AIC = 28051, BIC = 28338; CTTdelta * SOA AIC = 27980 , BIC = 28282 )
+  '
   anova(SOA_CTTdelta_model, SOA_CTT1_CTTdelta_model)
   
 }
@@ -420,18 +455,16 @@ Delta, which represents the slowing caused by distractor circles in CTT2 signifi
 
 # Saves word table of final model - NOTE: saves odds ratio not estimates
 # The coefficients are in this case automatically converted (exponentiated). 
-mytable(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta', 'CTT_fullsamp')
+mytable(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta', 'CTT_chr')
 # Also save non transformed (log odds)
 #tab_model(SOA_CTT1_CTTdelta_model_original, file = paste(table_outpath, 'CTT-non-transformed.doc'), transform = NULL)
 # https://strengejacke.github.io/sjPlot/articles/plot_model_estimates.html
 #plot_model(SOA_CTT1_CTTdelta_model_original, dot.size = 1)
 # save a plot of the odds ratios
 ctt_oddsratio <-myplot(SOA_CTT1_CTTdelta_model, 'CTT1', 'CTT delta')
-saveplot('CTT', ctt_oddsratio)
+saveplot('CTT_chr', ctt_oddsratio)
 
 # Plot with reduced terms for clearer use in presentations
 ctt_oddsratio_selected <-myplot_reduced(SOA_CTT1_CTTdelta_model, "COGtrail1time_W3", "COGtraildeltatime_W3", 'CTT1', 'CTT delta')
-saveplot('CTT_selectedTerms', ctt_oddsratio_selected)
+saveplot('CTT_selectedTerms_chr', ctt_oddsratio_selected)
 
-
-saveplot('CTT', ctt_oddsratio)

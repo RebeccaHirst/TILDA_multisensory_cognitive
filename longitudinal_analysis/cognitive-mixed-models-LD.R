@@ -212,6 +212,8 @@ demographic_summary <-
 demo_table <- summary_table(dplyr::group_by(data, nC3), demographic_summary)
 View(demo_table)
 
+write.table(demo_table, paste(table_outpath, this_cog_measure, "_groups", sep=""), sep=",", quote=FALSE, row.names=F)
+
 #### Test W1 vs W5 difference in each group for animal naming ####
 #perform for each group independantly (but wih corrected ps) so that we can describe each trajectory
 groupA<-analysis_df[(analysis_df$nC3=='A'),] 
@@ -508,8 +510,8 @@ if(!plotting_only){
 # Does the interaction with cognitive group remain significant after controlling fo the interaction with age and sex
 
 delayed recall X2(4) =62.448 , p = 8.867e-13 *** (baseline; AIC =28218   BIC = 28450; full; AIC = 28163  , BIC =28427 
-animal naming X2(4) = 87.9 , p < 2.2e-16 *** (baseline; AIC = 28202 BIC =28435 ; full; AIC = 28122, BIC = 28386
-immediate recall X2(4) = 92.736  , p < < 2.2e-16 ***(baseline; AIC =28177 BIC =28410; full; AIC = 28092 , BIC =  28356
+animal naming X2(4) = 90.231 , p < 2.2e-16  *** (baseline; AIC = 28124 BIC =28396 ; full; AIC = 28042 , BIC = 28345
+immediate recall X2(4) = 90.223   , p < 2.2e-16 *** ***(baseline; AIC =28098  BIC =28370 full; AIC = 28016 , BIC =  28319
 '
   # Likelihood ratio test comparing full model to model with key interaction term dropped
   # Running this 3 times for longitudinal models so interpret with corrected alpha of .016
