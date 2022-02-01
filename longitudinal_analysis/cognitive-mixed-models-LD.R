@@ -7,10 +7,13 @@ Run cognitive-kml.R in advance of this for a) immediate recall b) delayed recall
 On each run cognitive-kml will return a value df_with_clusters, use this to set 
 delayed_recall_groups, animal_naming_groups and immediate_recall_groups respectively. 
 
+Animal naming and immediate recall include depression in their models and delayed recall does not due to 
+model convergence.
+
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "delayed recall"
+this_cog_measure <- "animal naming"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -65,17 +68,33 @@ saveplot <- function(var, plot){
 }
 
 # myplot
+
 myplot <- function(model, var1, var2){
   plot_model(model, dot.size = 1,
-             axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
-                                 "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
-                                 "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
-                                 "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
-                                 "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]","Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
-                                 "Cardio conds [2]", "Age * SOA [150]",
-                                 "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
-                                 paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
-                                 "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 2B1F\n", var1,'and', var2))
+               axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
+                                   "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
+                                   "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
+                                   "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
+                                   "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]","Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
+                                   "Cardio conds [2]", "Depression [1]", "Age * SOA [150]",
+                                   "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
+                                   paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
+                                   "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 2B1F\n", var1,'and', var2))
+}
+# drop depression if delayed recall
+if(this_cog_measure == "delayed recall"){
+  myplot <- function(model, var1, var2){
+    plot_model(model, dot.size = 1,
+               axis.labels = rev(c("Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
+                                   "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
+                                   "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
+                                   "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
+                                   "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]","Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
+                                   "Cardio conds [2]", "Age * SOA [150]",
+                                   "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
+                                   paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
+                                   "Sex [Female] * SOA [230]")))+ ggtitle(paste("Predicting Accuracy in 2B1F\n", var1,'and', var2))
+  }
 }
 # myplot_reduced (to limit the terms plotted - for slide presentations)
 myplot_reduced <- function(model, var1, var2, var1_newname, var2_newname){
@@ -98,12 +117,27 @@ mytable <- function(model, var1, var2, plotname){
                             "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
                             "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
                             "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
-                            "Cardio conds [2]", "Age * SOA [150]",
+                            "Cardio conds [2]", "Depression [1]", "Age * SOA [150]",
                             "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
                             paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
                             "Sex [Female] * SOA [230]"))
 }
 
+# drop depression if delayed recall
+if(this_cog_measure == "delayed recall"){
+  mytable <- function(model, var1, var2, plotname){
+    tab_model(model, file = paste(table_outpath, plotname, '.doc', sep = ''),
+              pred.labels = c("Intercept", "Age", "SOA [150]", "SOA [230]", var1, var2, "Sex [Female]", "Education [Secondary]",
+                              "Education [Third/Higher]", "Pre/Post [Pre]", "VAS", "SR. hearing [Fair]", "SR. hearing [Good]",
+                              "SR. hearing [Very Good]", "SR. hearing [Excellent]", "SR. vision [Fair]", "SR. vision [Good]",
+                              "SR. vision [Very Good]", "SR. vision [Excellent]", "1B1F [0.5]", "1B1F [1]",
+                              "2B0F [0.5]", "2B0F [1]", "0B2F [0.5]", "0B2F [1]", "Chronic conds [1]","Chronic conds [2]","Cardio conds [1]",
+                              "Cardio conds [2]", "Age * SOA [150]",
+                              "Age * SOA [230]", paste("SOA [150] * ", var1), paste("SOA [230] * ", var1),
+                              paste("SOA [150] * ", var2), paste("SOA [230] * ", var2), "Sex [Female] * SOA [150]",
+                              "Sex [Female] * SOA [230]"))
+  }
+}
 #### Prep dataframe ####
 
 # dataframes containing each of the cognitive groups (first run cognitive-kml with each variable to get df_with_clusters)
@@ -499,24 +533,38 @@ analysis_df_long_scaled$nC3 <- relevel(analysis_df_long_scaled$nC3, ref = "A")
 
 if(!plotting_only){
   # If we are only plotting we don't need all of the models (save time, only get full model)
-  
-  # Adjusted baseline model: nC3 + SOA + age *SOA + sex * SOA
-  SOA_additive <-glmer(
-    Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + (1|tilda_serial), 
-    data = analysis_df_long_scaled, 
-    family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-  
+  if(this_cog_measure != "delayed recall"){
+    # Adjusted baseline model: nC3 + SOA + age *SOA + sex * SOA
+    SOA_additive <-glmer(
+      Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+        Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + DEPRESSED_W3+ (1|tilda_serial), 
+      data = analysis_df_long_scaled, 
+      family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+  } else if(this_cog_measure == "delayed recall"){# drop depression for delayed recall analysis
+    SOA_additive <-glmer(
+      Accuracy ~  age_W3*SOA + nC3 + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+        Shams_0B2F_W3 + CHR3_W3 + CVD4_W3 + (1|tilda_serial), 
+      data = analysis_df_long_scaled, 
+      family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+    
+    }
   
 }
 
 # Adjusted full interaction model: nC3 * SOA + age *SOA + sex * SOA
-SOA_interaction <-glmer(
-  Accuracy ~  age_W3*SOA + nC3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
-    Shams_0B2F_W3 + CHR3_W3 + CVD4_W3  + (1|tilda_serial), 
-  data = analysis_df_long_scaled, 
-  family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-
+if(this_cog_measure != "delayed recall"){
+  SOA_interaction <-glmer(
+    Accuracy ~  age_W3*SOA + nC3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+      Shams_0B2F_W3 + CHR3_W3 + CVD4_W3  +DEPRESSED_W3 + (1|tilda_serial), 
+    data = analysis_df_long_scaled, 
+    family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+  } else if(this_cog_measure == "delayed recall"){# drop depression for delayed recall analysis
+    SOA_interaction <-glmer(
+      Accuracy ~  age_W3*SOA + nC3 * SOA + sex_W3 * SOA + edu3_W3 + Pre_Post + VAS_W3 + ph108_W3 + ph102_W3 + Shams_1B1F_W3 + Shams_2B0F_70_W3 + 
+        Shams_0B2F_W3 + CHR3_W3 + CVD4_W3  + (1|tilda_serial), 
+      data = analysis_df_long_scaled, 
+      family = binomial(link = "logit"), weights = nTrials, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+  }
 if(!plotting_only){
   
   '

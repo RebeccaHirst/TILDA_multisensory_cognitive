@@ -14,12 +14,13 @@ Benefits of kml over standard algorithms:
   3. Clear documentation and publications
 
 "
-# Type the measure you want to run k means on ('animal naming', 'delayed recall' or 'immediate recall')
-this_cog_measure <- "immediate recall"
 
 # Import packages
 library(kml)
 library(jcolors)# for plotting custom trajectories
+
+# Type the measure you want to run k means on ('animal naming', 'delayed recall' or 'immediate recall')
+this_cog_measure <- "animal naming"
 
 # Functions
 # Automatically save plots to a directory named figures/tables in the current working directory
