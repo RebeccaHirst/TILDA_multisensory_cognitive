@@ -60,7 +60,7 @@ saveplot <- function(var, plot){
     path = NULL,
     scale = 1,
     width = 6,
-    height = 10,
+    height = 7,
     units = c("in"),
     dpi = 300,
     limitsize = TRUE,
