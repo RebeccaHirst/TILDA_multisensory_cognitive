@@ -13,7 +13,7 @@ model convergence.
 "
 
 # set to "animal naming", "delayed recall" or "immediate recall"
-this_cog_measure <- "immediate recall"
+this_cog_measure <- "delayed recall"
 
 #If plotting only we will only run full models and plot them, likelihood ratio tests willnot be performed
 plotting_only <- FALSE
@@ -60,7 +60,7 @@ saveplot <- function(var, plot){
     path = NULL,
     scale = 1,
     width = 6,
-    height = 10,
+    height = 7,
     units = c("in"),
     dpi = 300,
     limitsize = TRUE,

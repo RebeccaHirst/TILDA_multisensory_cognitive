@@ -20,7 +20,7 @@ library(kml)
 library(jcolors)# for plotting custom trajectories
 
 # Type the measure you want to run k means on ('animal naming', 'delayed recall' or 'immediate recall')
-this_cog_measure <- "animal naming"
+this_cog_measure <- "delayed recall"
 
 # Functions
 # Automatically save plots to a directory named figures/tables in the current working directory
